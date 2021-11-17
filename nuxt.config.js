@@ -1,3 +1,11 @@
+const routerBase =
+  process.env.DEPLOY_ENV === 'GH_PAGES'
+    ? {
+        router: {
+          base: '/F2E-3-2/'
+        }
+    } : {}
+
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -15,6 +23,8 @@ export default {
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
     ]
   },
+
+  ...routerBase,
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
