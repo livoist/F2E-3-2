@@ -12,11 +12,23 @@
     "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup"
   },
   "dependencies": {
+    "@nuxtjs/axios": "^5.13.6",
     "core-js": "^3.15.1",
-    "nuxt": "^2.15.7"
+    "jssha": "^3.2.0",
+    "leaflet": "^1.7.1",
+    "mapbox-gl": "^2.6.0",
+    "mapbox-gl-leaflet": "0.0.15",
+    "nuxt": "^2.15.7",
+    "nuxt-leaflet": "0.0.25",
+    "vue2-leaflet": "^2.7.1",
+    "vue2-leaflet-markercluster": "^3.1.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "push-dir": "^0.4.1"
+    "pug": "^3.0.2",
+    "pug-plain-loader": "^1.1.0",
+    "push-dir": "^0.4.1",
+    "sass": "^1.43.4",
+    "sass-loader": "^10.2.0"
   }
 }

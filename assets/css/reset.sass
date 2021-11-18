@@ -1,0 +1,43 @@
+.page-enter-active,
+.page-leave-active
+  transition: opacity 0.5s
+
+.page-enter,
+.page-leave-to
+  opacity: 0
+  
+#__nuxt
+  overflow: hidden
+
+body
+  overflow-x: hidden
+  font-family: "LiHei Pro","黑體-繁","微軟正黑體", sans-serif
+  width: 100vw
+  position: relative
+  margin: 0
+  padding: 0
+  &.overflowY
+    overflow-y: scroll !important
+  &.fixed
+    position: fixed !important 
+
+img
+  vertical-align: top
+  max-width: 100%
+
+ul,li
+  padding: 0
+  margin: 0
+  list-style: none
+
+p,
+h2,
+h3,
+h4,
+h5,
+h6
+  margin: 0
+
+a
+  text-decoration: none
+  display: block

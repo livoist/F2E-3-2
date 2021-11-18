@@ -1,3 +1,5 @@
+import path from 'path'
+
 const routerBase =
   process.env.DEPLOY_ENV === 'GH_PAGES'
     ? {
@@ -20,7 +22,8 @@ export default {
       { name: 'format-detection', content: 'telephone=no' }
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      { rel: 'stylesheet', href: 'https://api.mapbox.com/mapbox-gl-js/v1.10.0/mapbox-gl.css' }
     ]
   },
 
@@ -28,10 +31,15 @@ export default {
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
+    '@/assets/css/style.sass',
+    '@/assets/css/reset.sass'
   ],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
+    '@/plugins/axios',
+    { src: "@plugins/vue2-leaflet-markercluster.js", mode: 'client' },
+    '@/plugins/mapbox.js'
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -43,9 +51,15 @@ export default {
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
+    '@nuxtjs/axios',
+    'nuxt-leaflet'
   ],
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+  },
+
+  alias: {
+    '@img': path.resolve(__dirname, './assets/img')
   }
 }
