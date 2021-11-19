@@ -1,11 +1,24 @@
 <template lang="pug">
 .sideMenu
+  LoadingPage(:isLoading="isLoading")
+
   .searchBtns
-    .location
+    .location(@click.self="isOpenLocation = !isOpenLocation")
       img(src="@img/location.png")
-      .selectionContainer
-        CustomSelect(:selectList="citys" @defVal="getCurCity")
-        CustomSelect(:selectList="stationNames" @defVal="getCurSelect")
+      .selectionContainer(:class="{ 'active': isOpenLocation }")
+        .selectBox
+          p 城市 / City
+          CustomSelect(
+            :selectList="citys"
+            @defVal="getCurCity"
+          )
+        .selectBox
+          p 地點 / Location
+          CustomSelect(
+            :selectList="stationNames"
+            :reloading="isReloading"
+            @defVal="getCurSelect"
+          )
     .bike
       img(src="@img/bike.png")
     .path
@@ -31,10 +44,13 @@ export default {
         'PingtungCounty',
         'KinmenCounty'
       ],
-      stationNames: '',
+      stationNames: [],
       curSelect: '',
       curCity: '',
-      curTarget: ''
+      curTarget: '',
+      isOpenLocation: false,
+      isLoading: false,
+      isReloading: false
     }
   },
   watch: {
@@ -43,8 +59,14 @@ export default {
       deep: true,
       handler(val) {
         if (val) {
-          console.log('cit', val)
+          this.isLoading = true
+          this.isReloading = true
           this.stationInfo()
+
+          setTimeout(() => {
+            this.isReloading = false
+            this.isLoading = false
+          }, 1000)
         }
       }
     },
@@ -60,24 +82,22 @@ export default {
   },
   methods: {
     getCurCity(val) {
-      console.log('c val', val)
       this.curCity = val
     },
     getCurSelect(val) {
       this.curSelect = val
     },
-    getCurCityMap() {
-      const cityMap = this.$store.state.curCityMap
+    async getCurCityMap() {
+      const cityMap = await this.$store.state.curCityMap
 
       const target = cityMap.filter(item => item.name === this.curSelect)
       this.curTarget = target[0]
 
-      this.$store.dispatch('getCurTarget', this.curTarget)
+      await this.$store.dispatch('getCurTarget', this.curTarget)
     },
     async stationInfo() {
       await this.$store.dispatch('getAllStation', this.curCity)
       this.stationNames = await this.$store.state.allStationName
-      console.log('this.sta', this.stationNames)
     }
   }
 }
@@ -91,7 +111,7 @@ export default {
   position: fixed
   left: 0
   top: 0
-  z-index: 10
+  z-index: 100
 
 .searchBtns
   display: flex
@@ -99,19 +119,41 @@ export default {
   align-items: center
   > div
       margin: 20px auto
-      cursor: pointer
+
+.location,.bike,.path
+  cursor: pointer
 
 .location
   position: relative
+  > img
+      pointer-events: none
   .selectionContainer
     position: absolute
     left: 200%
+    z-index: -1
     background: #172532
     width: 300px
     display: flex
     justify-content: center
     align-items: center
     flex-direction: column
-    padding: 50px 0
+    padding: 20px 0
     top: -20px
+    transform: translateY(-300%)
+    transition: 0.5s ease-in-out
+    &.active
+      transform: translateY(0)
+
+  .selectBox
+    display: flex
+    flex-direction: column
+    justify-content: center
+    align-items: center
+    margin: 10px 0
+    > p
+        color: #a3a3a3
+        font-weight: bold
+        font-size: 20px
+        letter-spacing: 4px
+        margin-bottom: 14px
 </style>

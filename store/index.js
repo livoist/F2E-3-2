@@ -62,15 +62,13 @@ const actions = {
     const curCityMap = res.map(item => {
       return {
         name: item.StationName.Zh_tw,
+        address: item.StationAddress.Zh_tw,
         id: item.StationID,
         pos: item.StationPosition
       }
     })
 
     const nameMap = curCityMap.map(item => item.name)
-
-    console.log('res', res)
-    console.log('map', curCityMap)
 
     commit('GET_BIKE_STATION', res)
     commit('GET_ALL_STATION_NAME', nameMap)

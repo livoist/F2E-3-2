@@ -1,22 +1,22 @@
 <template lang="pug">
 .customSelect(
-  :data-value="defaultValue"
+  :data-value="defaultState"
   :class="{ 'select': true }"
 )
   .selector(@click="toggleList")
     .label
-      span(v-html="defaultValue")
+      span(v-html="defaultState")
 
     .toggleArrow(:class="{ 'expanded': visible }")
 
     div(:class="{ 'hidden': !visible }")
       ul
         li(
-          v-for="item in selectList"
+          v-for="(item, idx) in selectList"
           :key="item.id"
-          :class="{ 'current': item === defaultValue }"
-          v-html="item"
+          :class="{ 'current': item === defaultState }"
           @click="selectEvent(item)"
+          v-html="`${cnList(item)}${item}`"
         )
 
 </template>
@@ -27,26 +27,63 @@ export default {
   name: 'CustomSelect',
   props: {
     selectList: {
-
+      type: Array,
+      default: []
+    },
+    reloading: {
+      type: Boolean,
+      default: () => false
     }
   },
   data() {
     return {
       visible: false,
-      defaultValue: '請選擇'
+      defaultValue: '請選擇',
+      userSelect: ''
+    }
+  },
+  computed: {
+    defaultState() {
+      return this.reloading ? this.defaultValue = '請選擇' : this.defaultValue
     }
   },
   methods: {
+    cnList(name) {
+      switch (name) {
+        case 'Taipei':
+          return '台北 / '
+        case 'NewTaipei':
+          return '新北 / '
+        case 'Taoyuan':
+          return '桃園 / '
+        case 'Taichung':
+          return '台中 / '
+        case 'Tainan':
+          return '台南 / '
+        case 'Kaohsiung':
+          return '高雄 / '
+        case 'Hsinchu':
+          return '新竹 / '
+        case 'MiaoliCounty':
+          return '苗栗 / '
+        case 'Chiayi':
+          return '嘉義 / '
+        case 'PingtungCounty':
+          return '屏東 / '
+        case 'KinmenCounty':
+          return '金門 / '
+        default:
+          return ''
+      }
+    },
     toggleList() {
       this.visible = !this.visible
     },
     selectEvent(item) {
-      this.defaultValue = item
-      this.$emit('defVal', this.defaultValue)
+      this.defaultValue = `${this.cnList(item)}${item}`
+      this.userSelect = item
+      this.$emit('defVal', this.userSelect)
     }
-  },
-  mounted() {
-    console.log('selectList', this.selectList)
   }
 }
 </script>
@@ -63,9 +100,9 @@ export default {
     right: -10%
     width: 0
     height: 0
-    border-left: 7px solid transparent
-    border-right: 7px solid transparent
-    border-top: 14px solid #fff
+    border-left: 5px solid transparent
+    border-right: 5px solid transparent
+    border-top: 10px solid #a3a3a3
     transform: rotateZ(0deg) translateY(0px)
     transition: 0.3s cubic-bezier(0.59, 1.39, 0.37, 1.01)
     // +iphone-width

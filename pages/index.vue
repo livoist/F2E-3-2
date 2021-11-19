@@ -44,10 +44,9 @@ export default {
       const popup = new this.$map.Popup()
 
       function getMarker(target) {
-        console.log('getMarker done')
         marker
           .setLngLat([target.pos.PositionLon, target.pos.PositionLat])
-          .setPopup(popup.setHTML(target.name))
+          .setPopup(popup.setHTML(target.address))
           .addTo(map)
           .togglePopup(true)
 
