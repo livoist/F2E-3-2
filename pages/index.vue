@@ -43,31 +43,21 @@ export default {
       const marker = new this.$map.Marker()
       const popup = new this.$map.Popup()
 
-      map.on('load', () => {
-        map.addLayer({
-          id: 'rpd_parks',
-          type: 'fill',
-          source: {
-            type: 'vector',
-            url: 'mapbox://mapbox.3o7ubwm8'
-          },
-          'source-layer': 'RPD_Parks'
-        })
-      })
-
       function getMarker(target) {
         console.log('getMarker done')
         marker
           .setLngLat([target.pos.PositionLon, target.pos.PositionLat])
           .setPopup(popup.setHTML(target.name))
           .addTo(map)
+          .togglePopup(true)
 
-        map.flyTo(
+        map.jumpTo(
           {
             center: [target.pos.PositionLon, target.pos.PositionLat],
-            zoom: 13,
+            zoom: 18,
             speed: 2,
             curve: 1,
+            duration: 5000,
             easing(t) {
               return t
             }

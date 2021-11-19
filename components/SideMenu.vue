@@ -4,11 +4,8 @@
     .location
       img(src="@img/location.png")
       .selectionContainer
-        select(v-model="curCity")
-          option(v-for="name in citys" :value="name") {{ name }}
-
-        select(v-model="curSelect")
-          option(v-for="name in stationNames" :value="name") {{ name }}
+        CustomSelect(:selectList="citys" @defVal="getCurCity")
+        CustomSelect(:selectList="stationNames" @defVal="getCurSelect")
     .bike
       img(src="@img/bike.png")
     .path
@@ -46,6 +43,7 @@ export default {
       deep: true,
       handler(val) {
         if (val) {
+          console.log('cit', val)
           this.stationInfo()
         }
       }
@@ -61,37 +59,25 @@ export default {
     }
   },
   methods: {
+    getCurCity(val) {
+      console.log('c val', val)
+      this.curCity = val
+    },
+    getCurSelect(val) {
+      this.curSelect = val
+    },
     getCurCityMap() {
       const cityMap = this.$store.state.curCityMap
 
       const target = cityMap.filter(item => item.name === this.curSelect)
-
       this.curTarget = target[0]
+
       this.$store.dispatch('getCurTarget', this.curTarget)
-      console.log('this', this.curTarget)
-
-      // const marker = new this.$map.Marker()
-  
-      // marker
-      //   .setLngLat([this.curTarget.pos.PositionLon, this.curTarget.pos.PositionLat])
-      //   .setPopup(new this.$map.Popup().setHTML(this.curTarget.name))
-      //   .addTo(map)
-
-      // this.$map.flyTo(
-      //   {
-      //     center: [this.curTarget.pos.PositionLon, this.curTarget.pos.PositionLat],
-      //     zoom: 13,
-      //     speed: 2,
-      //     curve: 1,
-      //     easing(t) {
-      //       return t
-      //     }
-      //   }
-      // )
     },
     async stationInfo() {
       await this.$store.dispatch('getAllStation', this.curCity)
-      this.stationNames = this.$store.state.allStationName
+      this.stationNames = await this.$store.state.allStationName
+      console.log('this.sta', this.stationNames)
     }
   }
 }
@@ -119,7 +105,7 @@ export default {
   position: relative
   .selectionContainer
     position: absolute
-    right: -18vw
+    left: 200%
     background: #172532
     width: 300px
     display: flex
@@ -127,5 +113,5 @@ export default {
     align-items: center
     flex-direction: column
     padding: 50px 0
-    top: 0
+    top: -20px
 </style>
