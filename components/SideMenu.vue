@@ -5,6 +5,7 @@
   .searchBtns
     .location(@click.self="isOpenLocation = !isOpenLocation")
       img(src="@img/location.png")
+
       .selectionContainer(:class="{ 'active': isOpenLocation }")
         .selectBox
           p 城市 / City
@@ -19,6 +20,20 @@
             :reloading="isReloading"
             @defVal="getCurSelect"
           )
+        .detailInfo
+          div
+            p
+              | 尚餘車位
+              br
+              | RentBikes
+            p {{ curRent.AvailableRentBikes }}
+          div
+            p
+              | 未歸還
+              br
+              | ReturnBikes
+            p {{ curRent.AvailableReturnBikes }}
+
     .bike
       img(src="@img/bike.png")
     .path
@@ -50,7 +65,9 @@ export default {
       curTarget: '',
       isOpenLocation: false,
       isLoading: false,
-      isReloading: false
+      isReloading: false,
+      curRents: '',
+      curRent: 0
     }
   },
   watch: {
@@ -80,12 +97,26 @@ export default {
       }
     }
   },
+  computed: {
+
+  },
   methods: {
+    getCurRent() {
+      const resource = this.curRents.filter(item => {
+        return item.StationID === this.curTarget.id
+      })
+
+      this.curRent = resource[0]
+    },
     getCurCity(val) {
       this.curCity = val
     },
     getCurSelect(val) {
       this.curSelect = val
+    },
+    async getAllStationRentBike() {
+      await this.$store.dispatch('getAvailability', this.curCity)
+      this.curRents = this.$store.state.availability
     },
     async getCurCityMap() {
       const cityMap = await this.$store.state.curCityMap
@@ -94,10 +125,12 @@ export default {
       this.curTarget = target[0]
 
       await this.$store.dispatch('getCurTarget', this.curTarget)
+      this.getCurRent()
     },
     async stationInfo() {
       await this.$store.dispatch('getAllStation', this.curCity)
       this.stationNames = await this.$store.state.allStationName
+      await this.getAllStationRentBike()
     }
   }
 }
@@ -156,4 +189,24 @@ export default {
         font-size: 20px
         letter-spacing: 4px
         margin-bottom: 14px
+        &.fz-14
+          font-size: 14px
+
+  .detailInfo
+    display: flex
+    margin-top: 30px
+    > div
+        display: flex
+        justify-content: center
+        align-items: center
+        flex-direction: column
+        text-align: center
+        color: #a3a3a3
+        margin: 0 20px
+        p
+          &:nth-of-type(1)
+            font-weight: bold
+          &:nth-of-type(2)
+            margin-top: 12px
+            font-size: 18px
 </style>
