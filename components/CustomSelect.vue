@@ -51,27 +51,47 @@ export default {
     cnList(name) {
       switch (name) {
         case 'Taipei':
-          return '台北 / '
+          return '台北市 / '
         case 'NewTaipei':
-          return '新北 / '
+          return '新北市 / '
         case 'Taoyuan':
-          return '桃園 / '
+          return '桃園市 / '
         case 'Taichung':
-          return '台中 / '
+          return '台中市 / '
+        case 'ChanghuaCounty':
+          return '彰化縣 /'
         case 'Tainan':
-          return '台南 / '
+          return '台南市 / '
         case 'Kaohsiung':
-          return '高雄 / '
+          return '高雄市 / '
         case 'Hsinchu':
-          return '新竹 / '
+          return '新竹市 / '
+        case 'HsinchuCounty':
+          return '新竹縣 /'
         case 'MiaoliCounty':
-          return '苗栗 / '
+          return '苗栗縣 / '
         case 'Chiayi':
-          return '嘉義 / '
+          return '嘉義市 / '
         case 'PingtungCounty':
-          return '屏東 / '
+          return '屏東縣 / '
         case 'KinmenCounty':
-          return '金門 / '
+          return '金門縣 / '
+        case 'Keelung':
+          return '基隆市 / '
+        case 'NantouCounty':
+          return '南投縣 / '
+        case 'YunlinCounty':
+          return '雲林縣 / '
+        case 'ChiayiCounty':
+          return '嘉義縣 / '
+        case 'YilanCounty':
+          return '宜蘭縣 / '
+        case 'HualienCounty':
+          return '花蓮縣 / '
+        case 'TaitungCounty':
+          return '台東縣 / '
+        case 'PenghuCounty':
+          return '澎湖縣 / '
         default:
           return ''
       }
@@ -90,7 +110,7 @@ export default {
 
 <style lang="sass" scoped>
 .customSelect
-  &.location ul
+  &.location ul, &.bikePath ul
     max-height: 65vh
 
 .selector

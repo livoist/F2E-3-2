@@ -3,69 +3,78 @@
   LoadingPage(:isLoading="isLoading")
 
   .searchBtns
-    .location(@click.self="changeInfo('location')")
+    .locationIcon(
+      @click.self="changeInfo('location')"
+      :class="{ 'active': curMenu === 'location' }"
+    )
       img(src="@img/location.png")
-
-      .selectionContainer(:class="{ 'active': isOpenLocation }")
-        .selectBox
-          p 城市 / City
-          CustomSelect.citys(
-            :selectList="citys"
-            @defVal="getCurCity"
-          )
-        .selectBox
-          p 地點 / Location
-          CustomSelect.location(
-            :selectList="stationNames"
-            :reloading="isReloading"
-            @defVal="getCurSelect"
-          )
-        .detailInfo
-          div
-            p
-              | 尚餘車位
-              br
-              | CanRent
-            p {{ canRent }}
-          div
-            p
-              | 未歸還
-              br
-              | NotReturn
-            p {{ notReturn }}
+      img(src="@img/location-h.png")
 
     .bike
-      .bikePath(@click.self="changeInfo('bikePath')")
+      .bikePathIcon(
+        @click.self="changeInfo('bikePath')"
+        :class="{ 'active': curMenu === 'bikePath' }"
+      )
         img(src="@img/bike.png")
-      .bikeInfos(:class="{ 'active': isOpenBikePath }")
-        .selectBox
-          p 城市 / City
-          CustomSelect.bikePath(
-            :selectList="bikeCitys"
-            @defVal="getCurBikePath"
-          )
-        .bakcInfoInner
-          .bikePathInfo(
-            v-for="(item, idx) in curCycling"
-            :key="item.id"
-            :data-idx="idx + 1"
-          )
-            .pathNam(v-if="item.RouteName")
-              p 路線名稱 / RouteName
-              p {{ item.RouteName }}
-            .pathStart(v-if="item.RoadSectionStart")
-              p 路線起點 / RoadSectionStart
-              p {{ item.RoadSectionStart }}
-            .pathEnd(v-if="item.RoadSectionEnd")
-              p 路線終點 / RoadSectionEnd
-              P {{ item.RoadSectionEnd }}
-            .pathDirection(v-if="item.Direction")
-              p 路線方向 / Direction
-              p {{ item.Direction }}
-            .pathLength(v-if="item.CyclingLength")
-              p 路線總長 / CyclingLength
-              p {{ item.CyclingLength }}km
-    .path
+        img(src="@img/bike-h.png")
+
+  .selectionContainer(:class="{ 'active': isOpenLocation }")
+    .selectBox
+      p 城市 / City
+      CustomSelect.citys(
+        :selectList="citys"
+        @defVal="getCurCity"
+      )
+    .selectBox
+      p 地點 / Location
+      CustomSelect.location(
+        :selectList="stationNames"
+        :reloading="isReloading"
+        @defVal="getCurSelect"
+      )
+    .detailInfo
+      div
+        p
+          | 尚餘車位
+          br
+          | CanRent
+        p {{ canRent }}
+      div
+        p
+          | 未歸還
+          br
+          | NotReturn
+        p {{ notReturn }}
+
+  .bikeInfos(:class="{ 'active': isOpenBikePath }")
+    .selectBox
+      p 城市 / City
+      CustomSelect.bikePath(
+        :selectList="bikeCitys"
+        @defVal="getCurBikePath"
+      )
+    .bakcInfoInner
+      .bikePathInfo(
+        v-for="(item, idx) in curCycling"
+        :key="item.id"
+        :data-idx="idx + 1"
+      )
+        .pathNam(v-if="item.RouteName")
+          p 路線名稱 / RouteName
+          p {{ item.RouteName }}
+        .pathStart(v-if="item.RoadSectionStart")
+          p 路線起點 / RoadSectionStart
+          p {{ item.RoadSectionStart }}
+        .pathEnd(v-if="item.RoadSectionEnd")
+          p 路線終點 / RoadSectionEnd
+          P {{ item.RoadSectionEnd }}
+        .pathDirection(v-if="item.Direction")
+          p 路線方向 / Direction
+          p {{ item.Direction }}
+        .pathLength(v-if="item.CyclingLength")
+          p 路線總長 / CyclingLength
+          p {{ item.CyclingLength }}km
+    //.path
       img(src="@img/path.png")
 
 </template>
@@ -123,7 +132,8 @@ export default {
       curRent: 0,
       notReturn: 0,
       canRent: 0,
-      curCycling: []
+      curCycling: [],
+      curMenu: ''
     }
   },
   watch: {
@@ -176,11 +186,13 @@ export default {
       if (type === 'location') {
         this.isOpenLocation = !this.isOpenLocation
         if (this.isOpenBikePath) this.isOpenBikePath = false
+        this.curMenu = type
       }
 
       if (type === 'bikePath') {
         this.isOpenBikePath = !this.isOpenBikePath
         if (this.isOpenLocation) this.isOpenLocation = false
+        this.curMenu = type
       }
     },
     getCurRent() {
@@ -240,19 +252,48 @@ export default {
   flex-direction: column
   align-items: center
   > div
-      margin: 20px auto
+      padding: 14px 0
 
-.location,.bike,.path
+.locationIcon,.bikePathIcon,.path
   cursor: pointer
 
-.location,.bikePath
+.locationIcon,.bikePathIcon
   position: relative
+  text-align: center
+  &:after
+    content: ''
+    position: absolute
+    background: #08111A
+    z-index: -1
+    width: 64px
+    height: 64px
+    left: 50%
+    top: 50%
+    transform: translate(-50%,-50%)
+    opacity: 0
+    visibility: hidden
+    transition: 0.3s
   > img
       pointer-events: none
+      transition: 0.3s
+      &:nth-of-type(2)
+        position: absolute
+        opacity: 0
+        left: 50%
+        top: 50%
+        transform: translate(-50%,-50%)
+        visibility: hidden
+  &:hover,&.active
+    &:after
+      opacity: 1
+      visibility: visible
+    img:nth-of-type(2)
+      opacity: 1
+      visibility: visible
 
 .selectionContainer
   position: absolute
-  left: 200%
+  left: 120%
   z-index: -1
   background: #172532
   width: 300px
@@ -261,7 +302,7 @@ export default {
   align-items: center
   flex-direction: column
   padding: 20px 0
-  top: -20px
+  top: 0
   transform: translateY(-300%)
   transition: 0.5s ease-in-out
   &.active
@@ -304,7 +345,7 @@ export default {
 .bikeInfos
   background: #172532
   position: absolute
-  left: 110%
+  left: 120%
   top: 0
   min-width: 400px
   padding: 20px
