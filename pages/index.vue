@@ -5,6 +5,7 @@
 
 <script>
 export default {
+  name: 'map',
   data() {
     return {
       station: '',
