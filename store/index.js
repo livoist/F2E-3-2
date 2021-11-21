@@ -52,7 +52,7 @@ const mutations = {
 
 const actions = {
   getCurTarget({ commit }, curTarget) {
-    console.log('store', curTarget)
+    //console.log('store', curTarget)
     commit('GET_CUR_TARGET', curTarget)
   },
   async getAllStation({ commit }, city) {

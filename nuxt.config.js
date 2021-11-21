@@ -27,8 +27,6 @@ export default {
     ]
   },
 
-  ...routerBase,
-
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
     '@/assets/css/style.sass',
