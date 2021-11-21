@@ -27,6 +27,7 @@ export default {
     ]
   },
 
+  // all resource endpoint path(資源路徑！！！非常重要)
   router: {
     base: '/F2E-3-2/'
   },
