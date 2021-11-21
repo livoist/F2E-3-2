@@ -3,7 +3,7 @@
   LoadingPage(:isLoading="isLoading")
 
   .searchBtns
-    .location(@click.self="isOpenLocation = !isOpenLocation")
+    .location(@click.self="changeInfo('location')")
       img(src="@img/location.png")
 
       .selectionContainer(:class="{ 'active': isOpenLocation }")
@@ -35,7 +35,36 @@
             p {{ notReturn }}
 
     .bike
-      img(src="@img/bike.png")
+      .bikePath(@click.self="changeInfo('bikePath')")
+        img(src="@img/bike.png")
+      .bikeInfos(:class="{ 'active': isOpenBikePath }")
+        .selectBox
+          p 城市 / City
+          CustomSelect.bikePath(
+            :selectList="bikeCitys"
+            @defVal="getCurBikePath"
+          )
+        .bakcInfoInner
+          .bikePathInfo(
+            v-for="(item, idx) in curCycling"
+            :key="item.id"
+            :data-idx="idx + 1"
+          )
+            .pathNam(v-if="item.RouteName")
+              p 路線名稱 / RouteName
+              p {{ item.RouteName }}
+            .pathStart(v-if="item.RoadSectionStart")
+              p 路線起點 / RoadSectionStart
+              p {{ item.RoadSectionStart }}
+            .pathEnd(v-if="item.RoadSectionEnd")
+              p 路線終點 / RoadSectionEnd
+              P {{ item.RoadSectionEnd }}
+            .pathDirection(v-if="item.Direction")
+              p 路線方向 / Direction
+              p {{ item.Direction }}
+            .pathLength(v-if="item.CyclingLength")
+              p 路線總長 / CyclingLength
+              p {{ item.CyclingLength }}km
     .path
       img(src="@img/path.png")
 
@@ -46,6 +75,28 @@ export default {
   name: 'SideMenu',
   data() {
     return {
+      bikeCitys: [
+        'Taichung',
+        'Keelung',
+        'HsinchuCounty',
+        'MiaoliCounty',
+        'ChanghuaCounty',
+        'NewTaipei',
+        'NantouCounty',
+        'YunlinCounty',
+        'ChiayiCounty',
+        'Chiayi',
+        'PingtungCounty',
+        'YilanCounty',
+        'HualienCounty',
+        'TaitungCounty',
+        'KinmenCounty',
+        'PenghuCounty',
+        'Taoyuan',
+        'Taipei',
+        'Kaohsiung',
+        'Tainan'
+      ],
       citys: [
         'Taipei',
         'NewTaipei',
@@ -62,17 +113,29 @@ export default {
       stationNames: [],
       curSelect: '',
       curCity: '',
+      curBikePath: '',
       curTarget: '',
       isOpenLocation: false,
+      isOpenBikePath: false,
       isLoading: false,
       isReloading: false,
       curRents: '',
       curRent: 0,
       notReturn: 0,
-      canRent: 0
+      canRent: 0,
+      curCycling: []
     }
   },
   watch: {
+    curBikePath: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val) {
+          this.getAllCyclingShape(val)
+        }
+      }
+    },
     curCity: {
       immediate: true,
       deep: true,
@@ -109,6 +172,17 @@ export default {
     }
   },
   methods: {
+    changeInfo(type) {
+      if (type === 'location') {
+        this.isOpenLocation = !this.isOpenLocation
+        if (this.isOpenBikePath) this.isOpenBikePath = false
+      }
+
+      if (type === 'bikePath') {
+        this.isOpenBikePath = !this.isOpenBikePath
+        if (this.isOpenLocation) this.isOpenLocation = false
+      }
+    },
     getCurRent() {
       const resource = this.curRents.filter(item => {
         return item.StationID === this.curTarget.id
@@ -116,11 +190,18 @@ export default {
 
       this.curRent = resource[0]
     },
+    getCurBikePath(val) {
+      this.curBikePath = val
+    },
     getCurCity(val) {
       this.curCity = val
     },
     getCurSelect(val) {
       this.curSelect = val
+    },
+    async getAllCyclingShape(city) {
+      await this.$store.dispatch('getCyclingShape', city)
+      this.curCycling = await this.$store.state.cyclingShape
     },
     async getAllStationRentBike() {
       await this.$store.dispatch('getAvailability', this.curCity)
@@ -164,57 +245,108 @@ export default {
 .location,.bike,.path
   cursor: pointer
 
-.location
+.location,.bikePath
   position: relative
   > img
       pointer-events: none
-  .selectionContainer
+
+.selectionContainer
+  position: absolute
+  left: 200%
+  z-index: -1
+  background: #172532
+  width: 300px
+  display: flex
+  justify-content: center
+  align-items: center
+  flex-direction: column
+  padding: 20px 0
+  top: -20px
+  transform: translateY(-300%)
+  transition: 0.5s ease-in-out
+  &.active
+    transform: translateY(0)
+
+.selectBox
+  display: flex
+  flex-direction: column
+  justify-content: center
+  align-items: center
+  margin: 10px 0
+  > p
+      color: #a3a3a3
+      font-weight: bold
+      font-size: 20px
+      letter-spacing: 4px
+      margin-bottom: 14px
+      &.fz-14
+        font-size: 14px
+
+.detailInfo
+  display: flex
+  margin-top: 30px
+  > div
+      display: flex
+      justify-content: center
+      align-items: center
+      flex-direction: column
+      text-align: center
+      color: #a3a3a3
+      margin: 0 20px
+      p
+        &:nth-of-type(1)
+          font-weight: bold
+          line-height: 1.5
+        &:nth-of-type(2)
+          margin-top: 12px
+          font-size: 18px
+
+.bikeInfos
+  background: #172532
+  position: absolute
+  left: 110%
+  top: 0
+  min-width: 400px
+  padding: 20px
+  border-radius: 0 0 8px 8px
+  transform: translateY(-300%)
+  transition: 0.5s
+  &.active
+    transform: translateY(0)
+.bakcInfoInner
+  overflow-y: scroll
+  max-height: 78vh
+
+.bikePathInfo
+  color: #a3a3a3
+  border: 2px solid #a3a3a3
+  border-radius: 8px
+  margin-bottom: 20px
+  padding: 28px 30px 4px
+  position: relative
+  &:after
+    content: attr(data-idx)
+    color: #172532
     position: absolute
-    left: 200%
-    z-index: -1
-    background: #172532
-    width: 300px
-    display: flex
-    justify-content: center
-    align-items: center
-    flex-direction: column
-    padding: 20px 0
-    top: -20px
-    transform: translateY(-300%)
-    transition: 0.5s ease-in-out
-    &.active
-      transform: translateY(0)
-
-  .selectBox
-    display: flex
-    flex-direction: column
-    justify-content: center
-    align-items: center
-    margin: 10px 0
-    > p
-        color: #a3a3a3
-        font-weight: bold
-        font-size: 20px
-        letter-spacing: 4px
-        margin-bottom: 14px
-        &.fz-14
-          font-size: 14px
-
-  .detailInfo
-    display: flex
-    margin-top: 30px
-    > div
-        display: flex
-        justify-content: center
-        align-items: center
-        flex-direction: column
-        text-align: center
-        color: #a3a3a3
-        margin: 0 20px
-        p
-          &:nth-of-type(1)
-            font-weight: bold
-          &:nth-of-type(2)
-            margin-top: 12px
-            font-size: 18px
+    left: 0
+    top: 0
+    background: #a3a3a3
+    width: 24px
+    height: 24px
+    border-radius: 0 0 8px 0
+    text-align: center
+    line-height: 24px
+    font-weight: bold
+    font-size: 14px
+  &:last-of-type
+    margin-bottom: 0
+  > div
+    margin-bottom: 12px
+  p
+    &:nth-of-type(1)
+      font-size: 18px
+      font-weight: bold
+      margin-bottom: 4px
+    &:nth-of-type(2)
+      font-size: 14px
 </style>

@@ -80,7 +80,7 @@ const actions = {
 
     commit('GET_BIKE_AVAILABILITY', res)
   },
-  async getcyclingShape({ commit }, city) {
+  async getCyclingShape({ commit }, city) {
     const url = 'Cycling/Shape'
     const res = await this.$axios.$get(`${url}/${city}?$format=JSON`)
 
