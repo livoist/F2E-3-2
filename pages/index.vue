@@ -75,6 +75,9 @@ export default {
   },
   mounted() {
     this.initMapBox()
+  },
+  async fetch() {
+    this.initMapBox()
   }
 }
 </script>

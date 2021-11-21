@@ -59,7 +59,7 @@ export default {
         case 'Taichung':
           return '台中市 / '
         case 'ChanghuaCounty':
-          return '彰化縣 /'
+          return '彰化縣 / '
         case 'Tainan':
           return '台南市 / '
         case 'Kaohsiung':
@@ -67,7 +67,7 @@ export default {
         case 'Hsinchu':
           return '新竹市 / '
         case 'HsinchuCounty':
-          return '新竹縣 /'
+          return '新竹縣 / '
         case 'MiaoliCounty':
           return '苗栗縣 / '
         case 'Chiayi':
@@ -117,7 +117,7 @@ export default {
   position: relative
   text-align: center
   cursor: pointer
-  width: 200px
+  width: 210px
   .toggleArrow
     position: absolute
     top: 35%

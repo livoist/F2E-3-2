@@ -53,6 +53,8 @@
         :selectList="bikeCitys"
         @defVal="getCurBikePath"
       )
+      .routeDetail
+        p 路線總數量 / TotalRoute : {{ curCycling.length }}
     .bakcInfoInner
       .bikePathInfo(
         v-for="(item, idx) in curCycling"
@@ -356,7 +358,13 @@ export default {
     transform: translateY(0)
 .bakcInfoInner
   overflow-y: scroll
-  max-height: 78vh
+  max-height: 70vh
+
+.routeDetail
+  p
+    color: #a3a3a3
+    font-size: 14px
+
 
 .bikePathInfo
   color: #a3a3a3
