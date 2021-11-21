@@ -89,6 +89,10 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.customSelect
+  &.location ul
+    max-height: 65vh
+
 .selector
   position: relative
   text-align: center
@@ -121,6 +125,7 @@ export default {
     //   font-size: 3vmin
   ul
     width: 100%
+    overflow-y: scroll
     list-style-type: none
     padding: 0
     margin: 0
@@ -134,6 +139,8 @@ export default {
     font-weight: bold
     font-size: 14px
     border-bottom: 1px solid #7e7e7e
+    &:last-of-type
+      border: none
     // +iphone-width
     //   font-size: 3vmin
     &:hover

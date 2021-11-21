@@ -9,13 +9,13 @@
       .selectionContainer(:class="{ 'active': isOpenLocation }")
         .selectBox
           p 城市 / City
-          CustomSelect(
+          CustomSelect.citys(
             :selectList="citys"
             @defVal="getCurCity"
           )
         .selectBox
           p 地點 / Location
-          CustomSelect(
+          CustomSelect.location(
             :selectList="stationNames"
             :reloading="isReloading"
             @defVal="getCurSelect"
@@ -25,14 +25,14 @@
             p
               | 尚餘車位
               br
-              | RentBikes
-            p {{ curRent.AvailableRentBikes }}
+              | CanRent
+            p {{ canRent }}
           div
             p
               | 未歸還
               br
-              | ReturnBikes
-            p {{ curRent.AvailableReturnBikes }}
+              | NotReturn
+            p {{ notReturn }}
 
     .bike
       img(src="@img/bike.png")
@@ -67,7 +67,9 @@ export default {
       isLoading: false,
       isReloading: false,
       curRents: '',
-      curRent: 0
+      curRent: 0,
+      notReturn: 0,
+      canRent: 0
     }
   },
   watch: {
@@ -76,6 +78,8 @@ export default {
       deep: true,
       handler(val) {
         if (val) {
+          this.canRent = 0
+          this.notReturn = 0
           this.isLoading = true
           this.isReloading = true
           this.stationInfo()
@@ -92,13 +96,17 @@ export default {
       immediate: true,
       handler(val) {
         if (val) {
+          this.canRent = 0
+          this.notReturn = 0
           this.getCurCityMap()
+
+          setTimeout(() => {
+            this.canRent = this.curRent.AvailableRentBikes
+            this.notReturn = this.curRent.AvailableReturnBikes
+          }, 500)
         }
       }
     }
-  },
-  computed: {
-
   },
   methods: {
     getCurRent() {
