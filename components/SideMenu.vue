@@ -51,7 +51,7 @@
       p 城市 / City
       CustomSelect.bikePath(
         :selectList="bikeCitys"
-        @defVal="getCurBikePath"
+        @defVal="getCurBikeCity"
       )
       .routeDetail
         p 路線總數量 / TotalRoute : {{ curCycling.length }}
@@ -60,6 +60,7 @@
         v-for="(item, idx) in curCycling"
         :key="item.id"
         :data-idx="idx + 1"
+        @click="getCurBikePath(item)"
       )
         .pathNam(v-if="item.RouteName")
           p 路線名稱 / RouteName
@@ -76,9 +77,30 @@
         .pathLength(v-if="item.CyclingLength")
           p 路線總長 / CyclingLength
           p {{ item.CyclingLength }}km
-    //.path
-      img(src="@img/path.png")
 
+  .userSelectPathInfo(
+    :class="{ 'active': getBikeInfoState }"
+  )
+    div(v-if="curSelectBikePathInfo.city")
+      | 城市 / City : 
+      span {{ curSelectBikePathInfo.city }}
+
+    div(v-if="curSelectBikePathInfo.name")
+      | 路線 / PathName : 
+      span {{ curSelectBikePathInfo.name }}
+
+    div(v-if="curSelectBikePathInfo.length")
+      | 總長 / Length : 
+      span {{ curSelectBikePathInfo.length / 1000 }}km
+
+    div(v-if="curSelectBikePathInfo.roadStart")
+      | 起點 / StartPoint : 
+      span {{ curSelectBikePathInfo.roadStart }}
+
+    div(v-if="curSelectBikePathInfo.roadEnd")
+      | 終點 / EndPoint : 
+      span {{ curSelectBikePathInfo.roadEnd }}
+  
 </template>
 
 <script>
@@ -124,7 +146,7 @@ export default {
       stationNames: [],
       curSelect: '',
       curCity: '',
-      curBikePath: '',
+      curBikePathCity: '',
       curTarget: '',
       isOpenLocation: false,
       isOpenBikePath: false,
@@ -135,11 +157,12 @@ export default {
       notReturn: 0,
       canRent: 0,
       curCycling: [],
-      curMenu: ''
+      curMenu: '',
+      curSelectBikePathInfo: {}
     }
   },
   watch: {
-    curBikePath: {
+    curBikePathCity: {
       immediate: true,
       deep: true,
       handler(val) {
@@ -183,6 +206,11 @@ export default {
       }
     }
   },
+  computed: {
+    getBikeInfoState() {
+      return (!this.isOpenBikePath && Object.keys(this.curSelectBikePathInfo).length !== 0)
+    }
+  },
   methods: {
     changeInfo(type) {
       if (type === 'location') {
@@ -204,14 +232,44 @@ export default {
 
       this.curRent = resource[0]
     },
-    getCurBikePath(val) {
-      this.curBikePath = val
+    getCurBikeCity(val) {
+      this.curBikePathCity = val
     },
     getCurCity(val) {
       this.curCity = val
     },
     getCurSelect(val) {
       this.curSelect = val
+    },
+    async getCurBikePath(item) {
+      this.isOpenBikePath = false
+      this.curSelectBikePathInfo = {}
+
+      const {
+        City,
+        RouteName,
+        CyclingLength,
+        RoadSectionStart,
+        RoadSectionEnd
+      } = item
+
+      this.curSelectBikePathInfo = {
+        city: City,
+        name: RouteName,
+        length: CyclingLength,
+        roadStart: RoadSectionStart,
+        roadEnd: RoadSectionEnd
+      }
+
+      const len = item.Geometry.length
+      const pathStr = item.Geometry.slice(18, len - 3)
+      const splitStr = pathStr.split(',')
+
+      const handlePathMap = () => {
+        return splitStr.map(item => item.split(' '))
+      }
+  
+      await this.$store.dispatch('getCurBikePath', handlePathMap())
     },
     async getAllCyclingShape(city) {
       await this.$store.dispatch('getCyclingShape', city)
@@ -373,6 +431,7 @@ export default {
   margin-bottom: 20px
   padding: 28px 30px 4px
   position: relative
+  cursor: pointer
   &:after
     content: attr(data-idx)
     color: #172532
@@ -398,4 +457,29 @@ export default {
       margin-bottom: 4px
     &:nth-of-type(2)
       font-size: 14px
+
+.userSelectPathInfo
+  background: rgba(#08111A,0.75)
+  padding: 15px 40px
+  position: fixed
+  color: rgba(#fff,0.6)
+  border-radius: 0 0 4px 4px
+  left: 51%
+  top: 0
+  transform: translateX(-50%)
+  display: flex
+  opacity: 0
+  visibility: hidden
+  transition: 0.3s
+  &.active
+    opacity: 1
+    visibility: visible
+  div
+    white-space: nowrap
+    font-size: 14px
+    margin: 0 10px
+    font-weight: bold
+    span
+      color: rgba(#fff,0.95)
+
 </style>

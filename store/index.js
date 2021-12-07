@@ -6,6 +6,7 @@ const GET_ALL_STATION_NAME = 'GET_ALL_STATION_NAME'
 const GET_CUR_CITY_MAP = 'GET_CUR_CITY_MAP'
 
 const GET_CUR_TARGET = 'GET_CUR_TARGET'
+const GET_CUR_BIKE_PATH = 'GET_CUR_BIKE_PATH'
 
 // advanced
 const GET_BIKE_STATION_NEAR_BY = 'GET_BIKE_STATION_NEAR_BY'
@@ -20,7 +21,8 @@ const state = () => ({
   allStationName: '',
   curCityMap: [],
   initMapBox: '',
-  curTarget: ''
+  curTarget: '',
+  curBikePath: []
 })
 
 const mutations = {
@@ -47,10 +49,16 @@ const mutations = {
   },
   [GET_CUR_TARGET](state, target) {
     state.curTarget = target
+  },
+  [GET_CUR_BIKE_PATH](state, path) {
+    state.curBikePath = path
   }
 }
 
 const actions = {
+  getCurBikePath({ commit }, path) {
+    commit('GET_CUR_BIKE_PATH', path)
+  },
   getCurTarget({ commit }, curTarget) {
     //console.log('store', curTarget)
     commit('GET_CUR_TARGET', curTarget)
