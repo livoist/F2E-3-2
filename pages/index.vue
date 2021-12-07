@@ -76,18 +76,14 @@ export default {
       )
     },
     getBikePath(path) {
-      this.mapInstance.getLayer("route") && this.mapInstance.removeLayer("route")
-      this.mapInstance.getSource("route") && this.mapInstance.removeSource("route")
+      // update source and layer
+      const sourceTargets = ['route', 'point-start', 'point-end']
+      sourceTargets.forEach(item => {
+        this.mapInstance.getLayer(item) && this.mapInstance.removeLayer(item)
+        this.mapInstance.getSource(item) && this.mapInstance.removeSource(item)
+      })
 
-      this.mapInstance.getLayer("point-start") && this.mapInstance.removeLayer("point-start")
-      this.mapInstance.getSource("point-start") && this.mapInstance.removeSource("point-start")
-
-      this.mapInstance.getLayer("point-end") && this.mapInstance.removeLayer("point-end")
-      this.mapInstance.getSource("point-end") && this.mapInstance.removeSource("point-end")
-
-      this.mapInstance.getLayer("layer-with-pulsing-dot") && this.mapInstance.removeLayer("layer-with-pulsing-dot")
-      this.mapInstance.getSource("dot-point") && this.mapInstance.removeSource("dot-point")
-
+      // bikePath source
       this.mapInstance.addSource("route", {
         type: "geojson",
         data: {
@@ -100,6 +96,7 @@ export default {
         }
       })
 
+      // startPoint source
       this.mapInstance.addSource("point-start", {
         type: "geojson",
         data: {
@@ -119,6 +116,7 @@ export default {
         }
       })
 
+      // endPoint source
       this.mapInstance.addSource("point-end", {
         type: "geojson",
         data: {
@@ -138,6 +136,7 @@ export default {
         }
       })
 
+      // add souce in layer
       this.mapInstance.addLayer({
         id: "route",
         type: "line",
@@ -177,10 +176,14 @@ export default {
         }
       })
 
-      const middlePoint = Math.floor(path.length / 2);
+      // get current bikePath middlePoint
+      const middlePoint = Math.floor(path.length / 2)
+      // get current zoomSize
+      let zoomSize = middlePoint > 30 ? 11 : 13
+      // jump to current bikePath middle point
       this.mapInstance.jumpTo({
         center: [path[middlePoint][0], path[middlePoint][1]],
-        zoom: 13,
+        zoom: zoomSize,
         speed: 2,
         curve: 1,
         duration: 5000,

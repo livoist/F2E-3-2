@@ -47,7 +47,7 @@
         p {{ notReturn }}
 
   .bikeInfos(:class="{ 'active': isOpenBikePath }")
-    .selectBox
+    .selectBox.mb-30
       p 城市 / City
       CustomSelect.bikePath(
         :selectList="bikeCitys"
@@ -76,10 +76,10 @@
           p {{ item.Direction }}
         .pathLength(v-if="item.CyclingLength")
           p 路線總長 / CyclingLength
-          p {{ item.CyclingLength }}km
+          p {{ item.CyclingLength / 1000 }}km
 
   .userSelectPathInfo(
-    :class="{ 'active': getBikeInfoState }"
+    :class="{ 'active': isOpenBikeDetail }"
   )
     div(v-if="curSelectBikePathInfo.city")
       | 城市 / City : 
@@ -93,11 +93,11 @@
       | 總長 / Length : 
       span {{ curSelectBikePathInfo.length / 1000 }}km
 
-    div(v-if="curSelectBikePathInfo.roadStart")
+    div.start(v-if="curSelectBikePathInfo.roadStart")
       | 起點 / StartPoint : 
       span {{ curSelectBikePathInfo.roadStart }}
 
-    div(v-if="curSelectBikePathInfo.roadEnd")
+    div.end(v-if="curSelectBikePathInfo.roadEnd")
       | 終點 / EndPoint : 
       span {{ curSelectBikePathInfo.roadEnd }}
   
@@ -158,7 +158,8 @@ export default {
       canRent: 0,
       curCycling: [],
       curMenu: '',
-      curSelectBikePathInfo: {}
+      curSelectBikePathInfo: {},
+      isOpenBikeDetail: false
     }
   },
   watch: {
@@ -206,13 +207,10 @@ export default {
       }
     }
   },
-  computed: {
-    getBikeInfoState() {
-      return (!this.isOpenBikePath && Object.keys(this.curSelectBikePathInfo).length !== 0)
-    }
-  },
   methods: {
     changeInfo(type) {
+      this.isOpenBikeDetail = false
+
       if (type === 'location') {
         this.isOpenLocation = !this.isOpenLocation
         if (this.isOpenBikePath) this.isOpenBikePath = false
@@ -242,8 +240,8 @@ export default {
       this.curSelect = val
     },
     async getCurBikePath(item) {
+      this.isOpenBikeDetail = true
       this.isOpenBikePath = false
-      this.curSelectBikePathInfo = {}
 
       const {
         City,
@@ -262,7 +260,7 @@ export default {
       }
 
       const len = item.Geometry.length
-      const pathStr = item.Geometry.slice(18, len - 3)
+      const pathStr = item.Geometry.slice(18, len - 2)
       const splitStr = pathStr.split(',')
 
       const handlePathMap = () => {
@@ -356,7 +354,7 @@ export default {
   left: 120%
   z-index: -1
   background: #172532
-  width: 300px
+  width: 290px
   display: flex
   justify-content: center
   align-items: center
@@ -374,12 +372,14 @@ export default {
   justify-content: center
   align-items: center
   margin: 10px 0
+  &.mb-30
+    margin-bottom: 30px
   > p
       color: #a3a3a3
       font-weight: bold
-      font-size: 20px
+      font-size: 16px
       letter-spacing: 4px
-      margin-bottom: 14px
+      margin-bottom: 6px
       &.fz-14
         font-size: 14px
 
@@ -401,6 +401,8 @@ export default {
         &:nth-of-type(2)
           margin-top: 12px
           font-size: 18px
+          font-weight: bold
+          color: rgba(#fff,0.85)
 
 .bikeInfos
   background: #172532
@@ -422,7 +424,6 @@ export default {
   p
     color: #a3a3a3
     font-size: 14px
-
 
 .bikePathInfo
   color: #a3a3a3
@@ -479,7 +480,24 @@ export default {
     font-size: 14px
     margin: 0 10px
     font-weight: bold
+    position: relative
     span
       color: rgba(#fff,0.95)
+    &.start,&.end
+      margin-left: 20px
+      &:before
+        content: ''
+        width: 10px
+        height: 10px
+        border: 2px solid #3A5A69
+        border-radius: 50%
+        position: absolute
+        left: -20px
+        top: 50%
+        transform: translateY(-50%)
+    &.start:before
+      background: #FEC804
+    &.end:before
+      background: #C2E3F4
 
 </style>

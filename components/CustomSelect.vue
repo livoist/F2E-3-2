@@ -138,8 +138,8 @@ export default {
   .label
     display: block
     padding: 9px
-    font-size: 14px
-    color: #a3a3a3
+    font-size: 16px
+    color: rgba(#fff,0.85)
     font-weight: bold
     // +iphone-width
     //   font-size: 3vmin
