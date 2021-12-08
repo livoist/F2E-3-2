@@ -46,6 +46,17 @@
           | NotReturn
         p {{ notReturn }}
 
+  .selectionContainer.advance(:class="{ 'active': isOpenLocation }")
+    .selectBox
+      p 範圍搜尋
+      p LocationSearch
+      CustomSelect(
+        :selectList="ranges"
+        @defVal="getCurMeters"
+      )
+
+
+
   .bikeInfos(:class="{ 'active': isOpenBikePath }")
     .selectBox.mb-30
       p 城市 / City
@@ -143,9 +154,11 @@ export default {
         'PingtungCounty',
         'KinmenCounty'
       ],
+      ranges: [250, 500, 750, 1000],
       stationNames: [],
       curSelect: '',
       curCity: '',
+      curMeters: 0,
       curBikePathCity: '',
       curTarget: '',
       isOpenLocation: false,
@@ -205,6 +218,13 @@ export default {
           }, 500)
         }
       }
+    },
+    curMeters: {
+      handler(val) {
+        if (val) {
+          this.getStationNearBy(val)
+        }
+      }
     }
   },
   methods: {
@@ -239,6 +259,9 @@ export default {
     getCurSelect(val) {
       this.curSelect = val
     },
+    getCurMeters(val) {
+      this.curMeters = val
+    },
     async getCurBikePath(item) {
       this.isOpenBikeDetail = true
       this.isOpenBikePath = false
@@ -268,6 +291,22 @@ export default {
       }
   
       await this.$store.dispatch('getCurBikePath', handlePathMap())
+    },
+    async getStationNearBy(meter) {
+      let searchCondition = {}
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const { latitude, longitude } = position.coords
+          searchCondition = {
+            lat: latitude,
+            lon: longitude,
+            distance: meter
+          }
+
+          this.$store.dispatch('getStationNearBy', searchCondition)
+        })
+      }
     },
     async getAllCyclingShape(city) {
       await this.$store.dispatch('getCyclingShape', city)
@@ -365,6 +404,8 @@ export default {
   transition: 0.5s ease-in-out
   &.active
     transform: translateY(0)
+  &.advance
+    top: 50%
 
 .selectBox
   display: flex

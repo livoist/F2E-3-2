@@ -12,7 +12,10 @@ export default {
       target: '',
       mapInstance: null,
       mapMarker: null,
-      mapPopup: null
+      mapPopup: null,
+      nearMarkers: [],
+      selfMarkers: [],
+      removeMarker: false
     }
   },
   computed: {
@@ -21,6 +24,12 @@ export default {
     },
     getCurBikeGeometry() {
       return this.$store.state.curBikePath
+    },
+    getCurStationNearBy() {
+      return this.$store.state.stationNearBy
+    },
+    getUserPosition() {
+      return this.$store.state.userPos
     }
   },
   watch: {
@@ -40,6 +49,14 @@ export default {
           this.getMarker(val)
         }
       }
+    },
+    getCurStationNearBy: {
+      deep: true,
+      handler(val) {
+        if (val) {
+          this.getUserCurStationNearBy(val)
+        }
+      }
     }
   },
   methods: {
@@ -54,6 +71,58 @@ export default {
 
       this.mapMarker = new this.$map.Marker()
       this.mapPopup = new this.$map.Popup()
+    },
+    async getUserCurStationNearBy(nearByAry) {
+      // remove old nearMarker
+      if (this.nearMarkers.length > 0) {
+        this.nearMarkers.forEach(item => item.remove())
+      }
+
+      // remove old selfMarker
+      if (this.selfMarkers.length > 0) {
+        this.selfMarkers.forEach(item => item.remove())
+      }
+
+      // custom selfMarker style
+      const el = document.createElement('div')
+      const childText = document.createElement('div')
+      childText.innerHTML = 'SELF'
+
+      childText.classList.add('textBlock')
+      el.classList.add('selfMarker')
+      el.appendChild(childText)
+
+      // add selfMarker on map
+      const selfMarker = new this.$map.Marker(el)
+      selfMarker.setLngLat(this.getUserPosition).addTo(this.mapInstance)
+      this.selfMarkers.push(selfMarker)
+
+      // add all nearMarker on map
+      nearByAry.forEach(item => {
+        const { StationName, StationPosition } = item
+        const nearMarker = new this.$map.Marker()
+
+        nearMarker
+          .setLngLat([StationPosition.PositionLon, StationPosition.PositionLat])
+          .setPopup(this.mapPopup.setHTML(StationName.Zh_tw))
+          .addTo(this.mapInstance)
+
+        this.nearMarkers.push(nearMarker)
+      })
+
+      // jump to self position
+      this.mapInstance.jumpTo(
+        {
+          center: this.getUserPosition,
+          zoom: 14,
+          speed: 2,
+          curve: 1,
+          duration: 5000,
+          easing(t) {
+            return t
+          }
+        }
+      )
     },
     getMarker(target) {
       this.mapMarker
@@ -178,8 +247,10 @@ export default {
 
       // get current bikePath middlePoint
       const middlePoint = Math.floor(path.length / 2)
+
       // get current zoomSize
       let zoomSize = middlePoint > 30 ? 11 : 13
+
       // jump to current bikePath middle point
       this.mapInstance.jumpTo({
         center: [path[middlePoint][0], path[middlePoint][1]],
@@ -205,3 +276,28 @@ export default {
   }
 }
 </script>
+
+<style lang="sass">
+.selfMarker
+  background: #172532
+  border: 3px solid #a3a3a3
+  width: 12px
+  height: 12px
+  border-radius: 50%
+  position: relative
+
+.textBlock
+  position: absolute
+  top: -50px
+  width: 60px
+  height: 30px
+  left: 50%
+  transform: translateX(-50%)
+  font-size: 14px
+  text-align: center
+  line-height: 30px
+  background: #000
+  color: #fff
+  border-radius: 6px
+
+</style>

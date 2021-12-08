@@ -7,6 +7,7 @@ const GET_CUR_CITY_MAP = 'GET_CUR_CITY_MAP'
 
 const GET_CUR_TARGET = 'GET_CUR_TARGET'
 const GET_CUR_BIKE_PATH = 'GET_CUR_BIKE_PATH'
+const GET_USER_POSITION = 'GET_USER_POSITION'
 
 // advanced
 const GET_BIKE_STATION_NEAR_BY = 'GET_BIKE_STATION_NEAR_BY'
@@ -16,13 +17,14 @@ const state = () => ({
   station: '',
   availability: '',
   cyclingShape: '',
-  stationNearBy: '',
+  stationNearBy: [],
   availabilityNearBy: '',
   allStationName: '',
   curCityMap: [],
   initMapBox: '',
   curTarget: '',
-  curBikePath: []
+  curBikePath: [],
+  userPos: []
 })
 
 const mutations = {
@@ -52,6 +54,9 @@ const mutations = {
   },
   [GET_CUR_BIKE_PATH](state, path) {
     state.curBikePath = path
+  },
+  [GET_USER_POSITION](state, pos) {
+    state.userPos = pos
   }
 }
 
@@ -94,10 +99,21 @@ const actions = {
 
     commit('GET_BIKE_CYCLING_SHAPE', res)
   },
-  async getStationNearBy({ commit }) {
+  async getStationNearBy({ commit }, condition) {
     const url = 'Bike/Station/NearBy'
-    const res = await this.$axios.$get(`${url}?$format=JSON`)
+    const { lat, lon, distance } = condition
+    console.log('lat: ', lat)
+    console.log('lon: ', lon)
+    console.log('distance: ', distance)
+    const res = await this.$axios.$get(
+      `${url}?$top=10&$spatialFilter=nearby(${25.047675}, ${121.517055}, ${distance})&$format=JSON`
+    )
 
+    const pos = [121.517055, 25.047675]
+
+    console.log('ressss', res)
+
+    commit('GET_USER_POSITION', pos)
     commit('GET_BIKE_STATION_NEAR_BY', res)
   },
   async getAvailabilityNearBy({ commit }) {
