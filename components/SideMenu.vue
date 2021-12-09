@@ -66,9 +66,10 @@
 
       .detailInfo(v-if="getCurNearByStation.length !== 0")
         div(
-          v-for="(item, idx) in getCurNearByStation"
-          :data-idx="idx + 1"
-          @click="getCurNearNameIdx(idx)"
+          v-for="(item, index) in getCurNearByStation"
+          :key="item.id"
+          :data-idx="index + 1"
+          @click="getCurNearNameIdx(item)"
         )
           p
             | Name-zh :
@@ -224,7 +225,6 @@ export default {
   watch: {
     curBikePathCity: {
       immediate: true,
-      deep: true,
       handler(val) {
         if (val) {
           this.getAllCyclingShape(val)
@@ -233,7 +233,6 @@ export default {
     },
     curCity: {
       immediate: true,
-      deep: true,
       handler(val) {
         if (val) {
           this.canRent = 0
@@ -250,7 +249,6 @@ export default {
       }
     },
     curSelect: {
-      deep: true,
       immediate: true,
       handler(val) {
         if (val) {
@@ -286,9 +284,8 @@ export default {
     }
   },
   methods: {
-    getCurNearNameIdx(idx) {
-      console.log('idx', idx)
-      this.$store.dispatch('getCurNearNameIdx', idx)
+    getCurNearNameIdx(item) {
+      this.$store.dispatch('getCurNearItem', item)
     },
     changeInfo(type) {
       this.isOpenBikeDetail = false

@@ -14,9 +14,7 @@ export default {
       mapMarker: null,
       mapPopup: null,
       nearMarkers: [],
-      selfMarkers: [],
-      nearPopups: [],
-      nearNames: []
+      selfMarkers: []
     }
   },
   computed: {
@@ -32,44 +30,35 @@ export default {
     getUserPosition() {
       return this.$store.state.userPos
     },
-    getCurNearNameIdx() {
-      return this.$store.state.nearNameIdx
-    },
-    getNearNamesState() {
-      return this.$store.state.isClearNearNames
+    getCurNearItem() {
+      return this.$store.state.nearNameItem
     }
   },
   watch: {
     getCurBikeGeometry: {
       deep: true,
       handler(val) {
-        if (val !== []) {
-          this.getBikePath(val)
-        }
+        if (val !== []) this.getBikePath(val)
       }
     },
     getCurTarget: {
       deep: true,
       immediate: true,
       handler(val) {
-        if (val !== '') {
-          this.getMarker(val)
-        }
+        if (val !== '') this.getMarker(val)
       }
     },
     getCurStationNearBy: {
       deep: true,
       handler(val) {
-        if (val) {
-          this.getUserCurPosNearByStation(val)
-        }
+        if (val) this.getUserCurPosNearByStation(val)
       }
     },
-    getCurNearNameIdx: {
+    getCurNearItem: {
+      immediate: true,
+      deep: true,
       handler(val) {
-        if (val) {
-          this.getCurNearSelectMarker(val)
-        }
+        if (val) this.getCurNearSelectMarker(val)
       }
     }
   },
@@ -86,22 +75,27 @@ export default {
       this.mapMarker = new this.$map.Marker()
       this.mapPopup = new this.$map.Popup()
     },
-    getCurNearSelectMarker(idx) {
-      const mm = this.nearMarkers.filter((item, index) => {
-        return index === idx
+    getCurNearSelectMarker(target) {
+      const result = this.getCurStationNearBy.findIndex(item => {
+        return item.StationName.Zh_tw === target.name.Zh_tw
       })
 
-      console.log('aaaa', this.nearNames)
-      console.log('nnnnn', this.nearNames[0].Zh_tw)
-
-      mm[0].setPopup(this.mapPopup.setHTML(this.nearNames[idx].Zh_tw)).togglePopup(true)
+      this.nearMarkers[result]
+        .setPopup(
+          this.mapPopup
+            .setHTML(`
+              Address : ${target.address.Zh_tw}
+              <br />
+              Capicaty : ${target.rent}
+            `)
+        )
+        .togglePopup()
     },
     async getUserCurPosNearByStation(nearByAry) {
       // remove old nearMarker
       if (this.nearMarkers.length > 0) {
         this.nearMarkers.forEach(item => item.remove())
         this.nearMarkers = []
-        this.nearNames = []
       }
 
       // remove old selfMarker
@@ -134,8 +128,8 @@ export default {
           .setPopup(this.mapPopup.setHTML(StationName.Zh_tw))
           .addTo(this.mapInstance)
 
+        // save all nearMarker
         this.nearMarkers.push(nearMarker)
-        this.nearNames.push(StationName)
       })
 
       // jump to self position
@@ -306,9 +300,6 @@ export default {
 </script>
 
 <style lang="sass">
-.mapboxgl-popup-close-button
-  display: none
-
 @keyframes userPoint
   0%
     box-shadow: 0 0 0 rgba(#a3a3a3,0.7)

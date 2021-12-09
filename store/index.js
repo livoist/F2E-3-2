@@ -8,8 +8,7 @@ const GET_CUR_CITY_MAP = 'GET_CUR_CITY_MAP'
 const GET_CUR_TARGET = 'GET_CUR_TARGET'
 const GET_CUR_BIKE_PATH = 'GET_CUR_BIKE_PATH'
 const GET_USER_POSITION = 'GET_USER_POSITION'
-const GET_CUR_NEAR_STATION_POS = 'GET_CUR_NEAR_STATION_POS'
-const IS_CLEAR_NEAR_NAMES = 'IS_CLEAR_NEAR_NAMES'
+const GET_CUR_NEAR_ITEM = 'GET_CUR_NEAR_ITEM'
 
 // advanced
 const GET_BIKE_STATION_NEAR_BY = 'GET_BIKE_STATION_NEAR_BY'
@@ -27,8 +26,7 @@ const state = () => ({
   curTarget: '',
   curBikePath: [],
   userPos: [],
-  nearNameIdx: 0,
-  isClearNearNames: false
+  nearNameItem: ''
 })
 
 const mutations = {
@@ -62,26 +60,19 @@ const mutations = {
   [GET_USER_POSITION](state, pos) {
     state.userPos = pos
   },
-  [GET_CUR_NEAR_STATION_POS](state, idx) {
-    state.nearNameIdx = idx
-  },
-  [IS_CLEAR_NEAR_NAMES](state, bool) {
-    state.isClearNearNames = bool
+  [GET_CUR_NEAR_ITEM](state, item) {
+    state.nearNameItem = item
   }
 }
 
 const actions = {
-  getNearNamesState({ commit }, bool) {
-    commit('IS_CLEAR_NEAR_NAMES', bool)
-  },
-  getCurNearNameIdx({ commit }, idx) {
-    commit('GET_CUR_NEAR_STATION_POS', idx)
+  getCurNearItem({ commit }, item) {
+    commit('GET_CUR_NEAR_ITEM', item)
   },
   getCurBikePath({ commit }, path) {
     commit('GET_CUR_BIKE_PATH', path)
   },
   getCurTarget({ commit }, curTarget) {
-    //console.log('store', curTarget)
     commit('GET_CUR_TARGET', curTarget)
   },
   async getAllStation({ commit }, city) {
@@ -118,18 +109,22 @@ const actions = {
   async getStationNearBy({ commit }, condition) {
     const url = 'Bike/Station/NearBy'
     const { lat, lon, distance } = condition
-    console.log('lat: ', lat)
-    console.log('lon: ', lon)
-    console.log('distance: ', distance)
+    // console.log('lat: ', lat)
+    // console.log('lon: ', lon)
+    // console.log('distance: ', distance)
+    // const testOb = {
+    //   lat: 25.047675,
+    //   lon: 121.517055,
+    //   pos: [121.517055, 25.047675]
+    // }
+
     const res = await this.$axios.$get(
-      `${url}?$top=10&$spatialFilter=nearby(${25.047675}, ${121.517055}, ${distance})&$format=JSON`
+      `${url}?$top=10&$spatialFilter=nearby(${lat}, ${lon}, ${distance})&$format=JSON`
     )
 
-    const pos = [121.517055, 25.047675]
+    const userPos = [lon, lat]
 
-    console.log('ressss', res)
-
-    commit('GET_USER_POSITION', pos)
+    commit('GET_USER_POSITION', userPos)
     commit('GET_BIKE_STATION_NEAR_BY', res)
   },
   async getAvailabilityNearBy({ commit }) {
