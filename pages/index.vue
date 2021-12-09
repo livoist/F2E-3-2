@@ -15,7 +15,8 @@ export default {
       mapPopup: null,
       nearMarkers: [],
       selfMarkers: [],
-      removeMarker: false
+      nearPopups: [],
+      nearNames: []
     }
   },
   computed: {
@@ -30,6 +31,12 @@ export default {
     },
     getUserPosition() {
       return this.$store.state.userPos
+    },
+    getCurNearNameIdx() {
+      return this.$store.state.nearNameIdx
+    },
+    getNearNamesState() {
+      return this.$store.state.isClearNearNames
     }
   },
   watch: {
@@ -54,7 +61,14 @@ export default {
       deep: true,
       handler(val) {
         if (val) {
-          this.getUserCurStationNearBy(val)
+          this.getUserCurPosNearByStation(val)
+        }
+      }
+    },
+    getCurNearNameIdx: {
+      handler(val) {
+        if (val) {
+          this.getCurNearSelectMarker(val)
         }
       }
     }
@@ -72,17 +86,30 @@ export default {
       this.mapMarker = new this.$map.Marker()
       this.mapPopup = new this.$map.Popup()
     },
-    async getUserCurStationNearBy(nearByAry) {
+    getCurNearSelectMarker(idx) {
+      const mm = this.nearMarkers.filter((item, index) => {
+        return index === idx
+      })
+
+      console.log('aaaa', this.nearNames)
+      console.log('nnnnn', this.nearNames[0].Zh_tw)
+
+      mm[0].setPopup(this.mapPopup.setHTML(this.nearNames[idx].Zh_tw)).togglePopup(true)
+    },
+    async getUserCurPosNearByStation(nearByAry) {
       // remove old nearMarker
       if (this.nearMarkers.length > 0) {
         this.nearMarkers.forEach(item => item.remove())
+        this.nearMarkers = []
+        this.nearNames = []
       }
 
       // remove old selfMarker
       if (this.selfMarkers.length > 0) {
         this.selfMarkers.forEach(item => item.remove())
+        this.selfMarkers = []
       }
-
+  
       // custom selfMarker style
       const el = document.createElement('div')
       const childText = document.createElement('div')
@@ -108,6 +135,7 @@ export default {
           .addTo(this.mapInstance)
 
         this.nearMarkers.push(nearMarker)
+        this.nearNames.push(StationName)
       })
 
       // jump to self position
@@ -278,6 +306,17 @@ export default {
 </script>
 
 <style lang="sass">
+.mapboxgl-popup-close-button
+  display: none
+
+@keyframes userPoint
+  0%
+    box-shadow: 0 0 0 rgba(#a3a3a3,0.7)
+  60%
+    opacity: 1
+  100%
+    box-shadow: 0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3, 0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3
+
 .selfMarker
   background: #172532
   border: 3px solid #a3a3a3
@@ -285,19 +324,41 @@ export default {
   height: 12px
   border-radius: 50%
   position: relative
+  animation: userPoint 0.5s both infinite alternate
+  // &:before
+  //   content: ''
+  //   position: absolute
+  //   left: 50%
+  //   top: 50%
+  //   transform: translate(-50%,-50%)
+  //   width: 1000px
+  //   height: 1000px
+  //   border-radius: 50%
+  //   background: rgba(#000,0.3)
 
 .textBlock
   position: absolute
-  top: -50px
-  width: 60px
-  height: 30px
+  top: -42px
+  width: 50px
+  height: 26px
   left: 50%
   transform: translateX(-50%)
-  font-size: 14px
+  font-size: 12px
   text-align: center
-  line-height: 30px
+  line-height: 26px
   background: #000
   color: #fff
   border-radius: 6px
+  &:after
+    content: ''
+    position: absolute
+    width: 0
+    height: 0
+    border-style: solid
+    border-width: 8px 5px 0 5px
+    border-color: #000 transparent transparent transparent
+    left: 50%
+    transform: translateX(-50%)
+    bottom: -8px
 
 </style>

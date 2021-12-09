@@ -18,46 +18,92 @@
         img(src="@img/bike.png")
         img(src="@img/bike-h.png")
 
-  .selectionContainer(:class="{ 'active': isOpenLocation }")
-    .selectBox
-      p 城市 / City
-      CustomSelect.citys(
-        :selectList="citys"
-        @defVal="getCurCity"
-      )
-    .selectBox
-      p 地點 / Location
-      CustomSelect.location(
-        :selectList="stationNames"
-        :reloading="isReloading"
-        @defVal="getCurSelect"
-      )
-    .detailInfo
-      div
-        p
-          | 尚餘車位
-          br
-          | CanRent
-        p {{ canRent }}
-      div
-        p
-          | 未歸還
-          br
-          | NotReturn
-        p {{ notReturn }}
+  .bikeRentInfos(:class="{ 'active': isOpenLocation }")
+    .selectionContainer.basicSearch
+      .selectBox
+        p 基本搜尋
+        p.slash BasicSearch
+      .selectBox
+        p 城市 / City
+        CustomSelect.citys(
+          :selectList="citys"
+          @defVal="getCurCity"
+        )
+      .selectBox
+        p 地點 / Location
+        CustomSelect.location(
+          :selectList="stationNames"
+          :reloading="isReloading"
+          @defVal="getCurSelect"
+        )
+      .detailInfo
+        div
+          p
+            | 尚餘車位
+            br
+            | CanRent
+          p {{ canRent }}
+        div
+          p
+            | 未歸還
+            br
+            | NotReturn
+          p {{ notReturn }}
 
-  .selectionContainer.advance(:class="{ 'active': isOpenLocation }")
-    .selectBox
-      p 範圍搜尋
-      p LocationSearch
-      CustomSelect(
-        :selectList="ranges"
-        @defVal="getCurMeters"
-      )
+    .selectionContainer.advance(:class="{ 'active': isOpenLocation }")
+      .selectBox
+        p 進階搜尋
+        p.slash AdvanceSearch
+      .selectBox
+        p 搜尋範圍 / distance
+        CustomSelect.advance(
+          :selectList="ranges"
+          @defVal="getCurMeters"
+        )
+      .result
+        p {{ getCurNearByStation.length }} 租借站
+        p {{ getCurNearByStation.length }} Near Station
+
+      .detailInfo(v-if="getCurNearByStation.length !== 0")
+        div(
+          v-for="(item, idx) in getCurNearByStation"
+          :data-idx="idx + 1"
+          @click="getCurNearNameIdx(idx)"
+        )
+          p
+            | Name-zh :
+            br
+            |
+            span {{ item.name.Zh_tw }}
+          p
+            | Name-en :
+            br
+            |
+            span {{ item.name.En }}
+          p
+            | Address-zh :
+            br
+            |
+            span {{ item.address.Zh_tw }}
+          p
+            | Address-en :
+            br
+            |
+            span {{ item.address.En }}
+          p
+            | Capacity : 
+            span {{ item.rent }}
+
+      .notSelect(v-else-if="curMeters === 0") 尚未選擇距離
+
+      .notFound(v-else)
+        | 此距離範圍沒有租借站
+        br
+        | ( Not found match condition result )
+      
 
 
-
-  .bikeInfos(:class="{ 'active': isOpenBikePath }")
+  .bikePathInfos(:class="{ 'active': isOpenBikePath }")
     .selectBox.mb-30
       p 城市 / City
       CustomSelect.bikePath(
@@ -223,11 +269,27 @@ export default {
       handler(val) {
         if (val) {
           this.getStationNearBy(val)
+          this.$store.dispatch('getNearNamesState', true)
         }
       }
     }
   },
+  computed: {
+    getCurNearByStation() {
+      return this.$store.state.stationNearBy.map(item => {
+        return {
+          name: item.StationName,
+          address: item.StationAddress,
+          rent: item.BikesCapacity
+        }
+      })
+    }
+  },
   methods: {
+    getCurNearNameIdx(idx) {
+      console.log('idx', idx)
+      this.$store.dispatch('getCurNearNameIdx', idx)
+    },
     changeInfo(type) {
       this.isOpenBikeDetail = false
 
@@ -388,10 +450,17 @@ export default {
       opacity: 1
       visibility: visible
 
-.selectionContainer
+.bikeRentInfos
   position: absolute
   left: 120%
+  top: 0
   z-index: -1
+  transform: translateY(-300%)
+  transition: 0.5s ease-in-out
+  &.active
+    transform: translateY(0)
+
+.selectionContainer
   background: #172532
   width: 290px
   display: flex
@@ -399,13 +468,65 @@ export default {
   align-items: center
   flex-direction: column
   padding: 20px 0
-  top: 0
   transform: translateY(-300%)
   transition: 0.5s ease-in-out
   &.active
     transform: translateY(0)
+  &.advance,&.basicSearch
+    padding: 14px 20px 20px
+    transform: translateY(0)
+  &.basicSearch
+    .detailInfo
+      margin-top: 10px
   &.advance
-    top: 50%
+    margin-bottom: 20px
+    position: relative
+    z-index: -1
+    .result
+      font-size: 14px
+      color: #fff
+      margin-bottom: 20px
+      text-align: center
+    .notFound,.notSelect
+      color: #a3a3a3
+      text-align: center
+      line-height: 1.5
+    .detailInfo
+      flex-direction: column
+      overflow-y: scroll
+      max-height: 35vh
+      margin-top: 0
+      div
+        border-top: 1px solid #fff
+        padding: 10px
+        display: flex
+        flex-direction: column
+        justify-content: center
+        align-items: flex-start
+        position: relative
+        cursor: pointer
+        > *
+            pointer-events: none
+        &:after
+          content: attr(data-idx)
+          position: absolute
+          text-align: center
+          line-height: 16px
+          width: 16px
+          height: 16px
+          background: #fff
+          color: #172532
+          font-size: 12px
+          left: -16px
+          top: -1px
+        p
+          font-weight: normal
+          font-size: 14px
+          color: #a3a3a3
+          text-align: left
+          margin: 0 0 10px
+        span
+          color: rgba(#fff,0.9)
 
 .selectBox
   display: flex
@@ -420,9 +541,20 @@ export default {
       font-weight: bold
       font-size: 16px
       letter-spacing: 4px
-      margin-bottom: 6px
+      position: relative
       &.fz-14
         font-size: 14px
+      &.slash
+        &:after
+          content: ''
+          position: absolute
+          left: 50%
+          bottom: -50%
+          transform: translateX(-50%)
+          width: 220px
+          height: 1px
+          background: #fff
+
 
 .detailInfo
   display: flex
@@ -440,12 +572,12 @@ export default {
           font-weight: bold
           line-height: 1.5
         &:nth-of-type(2)
-          margin-top: 12px
+          margin-top: 6px
           font-size: 18px
           font-weight: bold
           color: rgba(#fff,0.85)
 
-.bikeInfos
+.bikePathInfos
   background: #172532
   position: absolute
   left: 120%
@@ -460,6 +592,7 @@ export default {
 .bakcInfoInner
   overflow-y: scroll
   max-height: 70vh
+  padding-right: 20px
 
 .routeDetail
   p

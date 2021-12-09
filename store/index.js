@@ -8,6 +8,8 @@ const GET_CUR_CITY_MAP = 'GET_CUR_CITY_MAP'
 const GET_CUR_TARGET = 'GET_CUR_TARGET'
 const GET_CUR_BIKE_PATH = 'GET_CUR_BIKE_PATH'
 const GET_USER_POSITION = 'GET_USER_POSITION'
+const GET_CUR_NEAR_STATION_POS = 'GET_CUR_NEAR_STATION_POS'
+const IS_CLEAR_NEAR_NAMES = 'IS_CLEAR_NEAR_NAMES'
 
 // advanced
 const GET_BIKE_STATION_NEAR_BY = 'GET_BIKE_STATION_NEAR_BY'
@@ -24,7 +26,9 @@ const state = () => ({
   initMapBox: '',
   curTarget: '',
   curBikePath: [],
-  userPos: []
+  userPos: [],
+  nearNameIdx: 0,
+  isClearNearNames: false
 })
 
 const mutations = {
@@ -57,10 +61,22 @@ const mutations = {
   },
   [GET_USER_POSITION](state, pos) {
     state.userPos = pos
+  },
+  [GET_CUR_NEAR_STATION_POS](state, idx) {
+    state.nearNameIdx = idx
+  },
+  [IS_CLEAR_NEAR_NAMES](state, bool) {
+    state.isClearNearNames = bool
   }
 }
 
 const actions = {
+  getNearNamesState({ commit }, bool) {
+    commit('IS_CLEAR_NEAR_NAMES', bool)
+  },
+  getCurNearNameIdx({ commit }, idx) {
+    commit('GET_CUR_NEAR_STATION_POS', idx)
+  },
   getCurBikePath({ commit }, path) {
     commit('GET_CUR_BIKE_PATH', path)
   },

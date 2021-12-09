@@ -1,7 +1,6 @@
 <template lang="pug">
 .customSelect(
   :data-value="defaultState"
-  :class="{ 'select': true }"
 )
   .selector(@click="toggleList")
     .label
@@ -112,6 +111,9 @@ export default {
 .customSelect
   &.location ul, &.bikePath ul
     max-height: 65vh
+  &.advance
+    .selector
+      width: 80px
 
 .selector
   position: relative
@@ -120,21 +122,21 @@ export default {
   width: 210px
   .toggleArrow
     position: absolute
-    top: 35%
+    top: 50%
     right: -10%
     width: 0
     height: 0
-    border-left: 5px solid transparent
-    border-right: 5px solid transparent
-    border-top: 10px solid #a3a3a3
-    transform: rotateZ(0deg) translateY(0px)
+    border-left: 4px solid transparent
+    border-right: 4px solid transparent
+    border-top: 9px solid #a3a3a3
+    transform: translateY(-50%) rotateZ(0deg) translateY(0px)
     transition: 0.3s cubic-bezier(0.59, 1.39, 0.37, 1.01)
     // +iphone-width
     //   border-left-width: 1.5vmin
     //   border-right-width: 1.5vmin
     //   border-top-width: 3vmin
     &.expanded
-      transform: rotateZ(180deg) translateY(2px)
+      transform: rotateZ(180deg) translateY(50%)
   .label
     display: block
     padding: 9px
