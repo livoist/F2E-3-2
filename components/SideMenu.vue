@@ -7,16 +7,13 @@
       @click.self="changeInfo('location')"
       :class="{ 'active': curMenu === 'location' }"
     )
-      img(src="@img/location.png")
-      img(src="@img/location-h.png")
+      .icon
 
-    .bike
-      .bikePathIcon(
-        @click.self="changeInfo('bikePath')"
-        :class="{ 'active': curMenu === 'bikePath' }"
-      )
-        img(src="@img/bike.png")
-        img(src="@img/bike-h.png")
+    .bikePathIcon(
+      @click.self="changeInfo('bikePath')"
+      :class="{ 'active': curMenu === 'bikePath' }"
+    )
+      .icon
 
   .bikeRentInfos(:class="{ 'active': isOpenLocation }")
     .selectionContainer.basicSearch
@@ -39,7 +36,7 @@
       .detailInfo
         div
           p
-            | 尚餘車位
+            | 可租借
             br
             | CanRent
           p {{ canRent }}
@@ -69,31 +66,41 @@
           v-for="(item, index) in getCurNearByStation"
           :key="item.id"
           :data-idx="index + 1"
-          @click="getCurNearNameIdx(item)"
+          @click="getCurNearNameItem(item)"
         )
           p
-            | Name-zh :
+            | 中文站名 / Name-zh :
             br
             |
             span {{ item.name.Zh_tw }}
           p
-            | Name-en :
+            | 英文站名 / Name-en :
             br
             |
             span {{ item.name.En }}
           p
-            | Address-zh :
+            | 中文地址 / Address-zh :
             br
             |
             span {{ item.address.Zh_tw }}
           p
-            | Address-en :
+            | 英文地址 / Address-en :
             br
             |
             span {{ item.address.En }}
-          p
-            | Capacity : 
-            span {{ item.rent }}
+
+          template(v-if="getDynamicNearByArray.length !== 0")
+            p
+              | 可租借 / CanRent : 
+              span {{ getDynamicNearByInfo(item.id, 'AvailableRentBikes') }}
+            p
+              | 未歸還 / NotReturn : 
+              span {{ getDynamicNearByInfo(item.id, 'AvailableReturnBikes') }}
+            p
+              | 資料更新時間 / UpdateTimes :
+              br
+              |
+              span {{ getDynamicNearByInfo(item.id, 'UpdateTime') }}
 
       .notSelect(v-else-if="curMeters === 0") 尚未選擇距離
 
@@ -145,7 +152,9 @@
 
     div(v-if="curSelectBikePathInfo.name")
       | 路線 / PathName : 
-      span {{ curSelectBikePathInfo.name }}
+      span
+        br
+        | {{ curSelectBikePathInfo.name }}
 
     div(v-if="curSelectBikePathInfo.length")
       | 總長 / Length : 
@@ -219,16 +228,15 @@ export default {
       curCycling: [],
       curMenu: '',
       curSelectBikePathInfo: {},
-      isOpenBikeDetail: false
+      isOpenBikeDetail: false,
+      dynamicNearByInfo: {}
     }
   },
   watch: {
     curBikePathCity: {
       immediate: true,
       handler(val) {
-        if (val) {
-          this.getAllCyclingShape(val)
-        }
+        if (val) this.getAllCyclingShape(val)
       }
     },
     curCity: {
@@ -239,7 +247,7 @@ export default {
           this.notReturn = 0
           this.isLoading = true
           this.isReloading = true
-          this.stationInfo()
+          this.getAllStationInfo()
 
           setTimeout(() => {
             this.isReloading = false
@@ -265,10 +273,7 @@ export default {
     },
     curMeters: {
       handler(val) {
-        if (val) {
-          this.getStationNearBy(val)
-          this.$store.dispatch('getNearNamesState', true)
-        }
+        if (val) this.getStationNearByDistance(val)
       }
     }
   },
@@ -278,13 +283,27 @@ export default {
         return {
           name: item.StationName,
           address: item.StationAddress,
-          rent: item.BikesCapacity
+          rent: item.BikesCapacity,
+          id: item.StationUID,
+          pos: item.StationPosition
         }
       })
+    },
+    getDynamicNearByArray() {
+      return this.$store.state.availabilityNearBy
     }
   },
   methods: {
-    getCurNearNameIdx(item) {
+    getDynamicNearByInfo(id, key) {
+      const targets = this.getDynamicNearByArray
+      const target = targets.filter(item => {
+        return item.StationUID === id
+      })
+
+      if (target[0] !== undefined) return target[0][key]
+    },
+    getCurNearNameItem(item) {
+      this.isOpenLocation = false
       this.$store.dispatch('getCurNearItem', item)
     },
     changeInfo(type) {
@@ -303,6 +322,7 @@ export default {
       }
     },
     getCurRent() {
+      this.isOpenLocation = false
       const resource = this.curRents.filter(item => {
         return item.StationID === this.curTarget.id
       })
@@ -321,10 +341,11 @@ export default {
     getCurMeters(val) {
       this.curMeters = val
     },
-    async getCurBikePath(item) {
+    getCurBikePath(item) {
       this.isOpenBikeDetail = true
       this.isOpenBikePath = false
 
+      // get need result
       const {
         City,
         RouteName,
@@ -333,6 +354,7 @@ export default {
         RoadSectionEnd
       } = item
 
+      // reassign to object
       this.curSelectBikePathInfo = {
         city: City,
         name: RouteName,
@@ -341,6 +363,7 @@ export default {
         roadEnd: RoadSectionEnd
       }
 
+      // handle origin data
       const len = item.Geometry.length
       const pathStr = item.Geometry.slice(18, len - 2)
       const splitStr = pathStr.split(',')
@@ -349,9 +372,12 @@ export default {
         return splitStr.map(item => item.split(' '))
       }
   
-      await this.$store.dispatch('getCurBikePath', handlePathMap())
+      this.$store.dispatch('getCurBikePath', handlePathMap())
     },
-    async getStationNearBy(meter) {
+    getDynamicNearBy(condition) {
+      this.$store.dispatch('getAvailabilityNearBy', condition)
+    },
+    getStationNearByDistance(meter) {
       let searchCondition = {}
 
       if ("geolocation" in navigator) {
@@ -364,6 +390,7 @@ export default {
           }
 
           this.$store.dispatch('getStationNearBy', searchCondition)
+          this.getDynamicNearBy(searchCondition)
         })
       }
     },
@@ -376,7 +403,7 @@ export default {
       this.curRents = this.$store.state.availability
     },
     async getCurCityMap() {
-      const cityMap = await this.$store.state.curCityMap
+      const cityMap = this.$store.state.curCityMap
 
       const target = cityMap.filter(item => item.name === this.curSelect)
       this.curTarget = target[0]
@@ -384,7 +411,7 @@ export default {
       await this.$store.dispatch('getCurTarget', this.curTarget)
       this.getCurRent()
     },
-    async stationInfo() {
+    async getAllStationInfo() {
       await this.$store.dispatch('getAllStation', this.curCity)
       this.stationNames = await this.$store.state.allStationName
       await this.getAllStationRentBike()
@@ -395,57 +422,49 @@ export default {
 
 <style lang="sass" scoped>
 .sideMenu
-  width: 64px
-  height: 100vh
-  background: #172532
   position: fixed
   left: 0
   top: 0
   z-index: 100
+  @media (max-width: 768px)
+    height: auto
 
 .searchBtns
   display: flex
   flex-direction: column
   align-items: center
-  > div
-      padding: 14px 0
-
-.locationIcon,.bikePathIcon,.path
-  cursor: pointer
 
 .locationIcon,.bikePathIcon
   position: relative
-  text-align: center
-  &:after
-    content: ''
-    position: absolute
-    background: #08111A
-    z-index: -1
-    width: 64px
-    height: 64px
-    left: 50%
-    top: 50%
-    transform: translate(-50%,-50%)
-    opacity: 0
-    visibility: hidden
-    transition: 0.3s
-  > img
-      pointer-events: none
-      transition: 0.3s
-      &:nth-of-type(2)
-        position: absolute
-        opacity: 0
-        left: 50%
-        top: 50%
-        transform: translate(-50%,-50%)
-        visibility: hidden
+  cursor: pointer
+  background: #a3a3a3
+  transition: 0.3s
+  padding: 16px
+  @media (max-width: 575px)
+    padding: 4vmin
   &:hover,&.active
-    &:after
-      opacity: 1
-      visibility: visible
-    img:nth-of-type(2)
-      opacity: 1
-      visibility: visible
+    background: #172532
+  .icon
+    width: 34px
+    height: 28px
+    background-size: 100% 100%
+    pointer-events: none
+    @media (max-width: 575px)
+      width: 7.5vmin
+      height: 6vmin
+
+.locationIcon
+  .icon
+    background-image: url('@img/location.png')
+  &:hover .icon
+    background-image: url('@img/location-h.png')
+
+.bikePathIcon
+  .icon
+    background-image: url('@img/bike.png')
+  &:hover .icon
+    background-image: url('@img/bike-h.png')
+
 
 .bikeRentInfos
   position: absolute
@@ -460,6 +479,7 @@ export default {
 .selectionContainer
   background: #172532
   width: 290px
+  max-width: 100%
   display: flex
   justify-content: center
   align-items: center
@@ -467,11 +487,15 @@ export default {
   padding: 20px 0
   transform: translateY(-300%)
   transition: 0.5s ease-in-out
+  @media (max-width: 575px)
+    width: auto
   &.active
     transform: translateY(0)
   &.advance,&.basicSearch
     padding: 14px 20px 20px
     transform: translateY(0)
+    @media (max-width: 575px)
+      padding: 3vmin 9vmin 4vmin 9vmin
   &.basicSearch
     .detailInfo
       margin-top: 10px
@@ -493,6 +517,8 @@ export default {
       overflow-y: scroll
       max-height: 35vh
       margin-top: 0
+      @media (max-width: 575px)
+        max-height: 26vh
       div
         border-top: 1px solid #fff
         padding: 10px
@@ -531,14 +557,20 @@ export default {
   justify-content: center
   align-items: center
   margin: 10px 0
+  @media (max-width: 575px)
+    margin: 2vmin 0
   &.mb-30
     margin-bottom: 30px
+    @media (max-width: 575px)
+      margin-bottom: 4vmin
   > p
       color: #a3a3a3
       font-weight: bold
-      font-size: 16px
+      font-size: 14px
       letter-spacing: 4px
       position: relative
+      @media (max-width: 575px)
+        font-size: 3vmin
       &.fz-14
         font-size: 14px
       &.slash
@@ -551,7 +583,6 @@ export default {
           width: 220px
           height: 1px
           background: #fff
-
 
 .detailInfo
   display: flex
@@ -584,17 +615,26 @@ export default {
   border-radius: 0 0 8px 8px
   transform: translateY(-300%)
   transition: 0.5s
+  @media (max-width: 575px)
+    min-width: auto
+    width: 70vw
+    padding: 2vmin 3vmin 4vmin 4vmin
   &.active
     transform: translateY(0)
+
 .bakcInfoInner
   overflow-y: scroll
   max-height: 70vh
   padding-right: 20px
+  @media (max-width: 575px)
+    padding-right: 2vmin
+    max-height: 75vh
 
-.routeDetail
-  p
-    color: #a3a3a3
-    font-size: 14px
+.routeDetail p
+  color: #a3a3a3
+  font-size: 14px
+  @media (max-width: 575px)
+    font-size: 3vmin
 
 .bikePathInfo
   color: #a3a3a3
@@ -604,6 +644,8 @@ export default {
   padding: 28px 30px 4px
   position: relative
   cursor: pointer
+  @media (max-width: 575px)
+    padding: 5vmin 5vmin 1vmin 6vmin
   &:after
     content: attr(data-idx)
     color: #172532
@@ -618,6 +660,11 @@ export default {
     line-height: 24px
     font-weight: bold
     font-size: 14px
+    @media (max-width: 575px)
+      width: 5vmin
+      height: 5vmin
+      font-size: 12px
+      line-height: 1.5
   &:last-of-type
     margin-bottom: 0
   > div
@@ -627,8 +674,12 @@ export default {
       font-size: 18px
       font-weight: bold
       margin-bottom: 4px
+      @media (max-width: 575px)
+        font-size: 3.5vmin
     &:nth-of-type(2)
       font-size: 14px
+      @media (max-width: 575px)
+        font-size: 3vmin
 
 .userSelectPathInfo
   background: rgba(#08111A,0.75)
@@ -643,6 +694,11 @@ export default {
   opacity: 0
   visibility: hidden
   transition: 0.3s
+  @media (max-width: 575px)
+    flex-direction: column
+    padding: 3vmin 3.5vmin
+    left: 58.5%
+    min-width: 73%
   &.active
     opacity: 1
     visibility: visible
@@ -652,10 +708,19 @@ export default {
     margin: 0 10px
     font-weight: bold
     position: relative
+    @media (max-width: 575px)
+      font-size: 3.5vmin
+      white-space: initial
+    br
+      display: none
+      @media (max-width: 575px)
+        display: block
     span
       color: rgba(#fff,0.95)
     &.start,&.end
       margin-left: 20px
+      @media (max-width: 575px)
+        margin-left: 6.5vmin
       &:before
         content: ''
         width: 10px
@@ -664,8 +729,12 @@ export default {
         border-radius: 50%
         position: absolute
         left: -20px
-        top: 50%
-        transform: translateY(-50%)
+        top: 3px
+        @media (max-width: 575px)
+          top: 1vmin
+          width: 2vmin
+          height: 2vmin
+          left: -4vmin
     &.start:before
       background: #FEC804
     &.end:before

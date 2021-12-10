@@ -3,6 +3,11 @@
   height: 100vh
 
 // mapbox style
+.mapboxgl-ctrl.mapboxgl-ctrl-attrib.mapboxgl-compact
+  display: none
+
+
+
 .mapboxgl-popup-content
   background: rgba(#000, 0.6)
   color: #fff
@@ -14,6 +19,9 @@
 
 .mapboxgl-popup-tip
   border-top-color: #7e7e7e !important
+
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip
+  border-bottom-color: #7e7e7e !important
 
 .mapboxgl-popup-close-button
   background: #7e7e7e

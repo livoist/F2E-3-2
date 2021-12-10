@@ -120,6 +120,8 @@ export default {
   text-align: center
   cursor: pointer
   width: 210px
+  @media (max-width: 575px)
+    width: 47vmin
   .toggleArrow
     position: absolute
     top: 50%
@@ -143,8 +145,8 @@ export default {
     font-size: 16px
     color: rgba(#fff,0.85)
     font-weight: bold
-    // +iphone-width
-    //   font-size: 3vmin
+    @media (max-width: 575px)
+      font-size: 3.5vmin
   ul
     width: 100%
     overflow-y: scroll

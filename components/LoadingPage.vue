@@ -17,10 +17,10 @@ export default {
   left: 0
   width: 100vw
   height: 100vh
-  line-height: 50vh
+  display: flex
+  justify-content: center
+  align-items: center
   background: rgba(255, 255, 255, 0.8)
-  text-align: center
-  padding-top: 200px
   font-size: 30px
   opacity: 0
   visibility: hidden
@@ -28,7 +28,10 @@ export default {
   font-weight: bold
   letter-spacing: 8px
   color: #7e7e7e
+  @media (max-width: 575px)
+    font-size: 5.5vmin
   &.loading
     opacity: 1
     visibility: visible
+
 </style>

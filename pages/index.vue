@@ -5,7 +5,6 @@
 
 <script>
 export default {
-  name: 'map',
   data() {
     return {
       station: '',
@@ -18,13 +17,13 @@ export default {
     }
   },
   computed: {
-    getCurTarget() {
+    getCurStationTarget() {
       return this.$store.state.curTarget
     },
     getCurBikeGeometry() {
       return this.$store.state.curBikePath
     },
-    getCurStationNearBy() {
+    getCurNearByStation() {
       return this.$store.state.stationNearBy
     },
     getUserPosition() {
@@ -32,6 +31,9 @@ export default {
     },
     getCurNearItem() {
       return this.$store.state.nearNameItem
+    },
+    getAvailabilityNearByArray() {
+      return this.$store.state.availabilityNearBy
     }
   },
   watch: {
@@ -41,14 +43,14 @@ export default {
         if (val !== []) this.getBikePath(val)
       }
     },
-    getCurTarget: {
+    getCurStationTarget: {
       deep: true,
       immediate: true,
       handler(val) {
-        if (val !== '') this.getMarker(val)
+        if (val !== '') this.getBikeStationMarker(val)
       }
     },
-    getCurStationNearBy: {
+    getCurNearByStation: {
       deep: true,
       handler(val) {
         if (val) this.getUserCurPosNearByStation(val)
@@ -76,20 +78,62 @@ export default {
       this.mapPopup = new this.$map.Popup()
     },
     getCurNearSelectMarker(target) {
-      const result = this.getCurStationNearBy.findIndex(item => {
-        return item.StationName.Zh_tw === target.name.Zh_tw
+      const { pos, name } = target
+
+      // get target index
+      const targetMarker = this.getCurNearByStation.findIndex(item => {
+        return item.StationName.Zh_tw === name.Zh_tw
       })
 
-      this.nearMarkers[result]
+      // get need info
+      const availabilityAry = this.getAvailabilityNearByArray
+      const {
+        AvailableRentBikes,
+        AvailableReturnBikes,
+        UpdateTime
+      } = availabilityAry[targetMarker]
+
+      // set marker
+      this.nearMarkers[targetMarker]
         .setPopup(
           this.mapPopup
             .setHTML(`
-              Address : ${target.address.Zh_tw}
-              <br />
-              Capicaty : ${target.rent}
+              <p class="popup-content">
+                <span>Address :</span> 
+                <span>${target.address.Zh_tw}</span>
+              </p>
+              <div class="popup-flex">
+                <p class="popup-content">
+                  <span>CanRent : </span>
+                  <span>${AvailableRentBikes}</span>
+                </p>
+                <p class="popup-content">
+                  <span>NotReturn : </span>
+                  <span>${AvailableReturnBikes}</span>
+                </p>
+              </div>
+              <p class="popup-content">
+                <span>LastUpdateTimes : </span>
+                <br />
+                <span>${UpdateTime}</span>
+                </p>
             `)
         )
         .togglePopup()
+
+      // jump to select marker
+      this.mapInstance.jumpTo(
+        {
+          center: [pos.PositionLon, pos.PositionLat],
+          zoom: 14,
+          speed: 2,
+          curve: 1,
+          duration: 5000,
+          easing(t) {
+            return t
+          }
+        }
+      )
     },
     async getUserCurPosNearByStation(nearByAry) {
       // remove old nearMarker
@@ -146,7 +190,7 @@ export default {
         }
       )
     },
-    getMarker(target) {
+    getBikeStationMarker(target) {
       this.mapMarker
         .setLngLat([target.pos.PositionLon, target.pos.PositionLat])
         .setPopup(this.mapPopup.setHTML(target.address))
@@ -269,14 +313,20 @@ export default {
 
       // get current bikePath middlePoint
       const middlePoint = Math.floor(path.length / 2)
+      const { innerWidth } = window
 
-      // get current zoomSize
-      let zoomSize = middlePoint > 30 ? 11 : 13
+      const getZoomSize = () => {
+        if ((middlePoint > 40 && innerWidth > 575)) {
+          return 11
+        } else if ((middlePoint > 40 && innerWidth < 575 )) {
+          return 9
+        } else if(middlePoint < 40) return 13
+      }
 
       // jump to current bikePath middle point
       this.mapInstance.jumpTo({
         center: [path[middlePoint][0], path[middlePoint][1]],
-        zoom: zoomSize,
+        zoom: getZoomSize(),
         speed: 2,
         curve: 1,
         duration: 5000,
@@ -292,14 +342,20 @@ export default {
   },
   mounted() {
     this.initMapBox()
-  },
-  async fetch() {
-    this.initMapBox()
   }
 }
 </script>
 
 <style lang="sass">
+.popup-flex
+  display: flex
+  p
+    &:nth-of-type(1)
+      margin-right: 20px
+
+.popup-content span:nth-of-type(1)
+  color: #F2DD66
+
 @keyframes userPoint
   0%
     box-shadow: 0 0 0 rgba(#a3a3a3,0.7)
