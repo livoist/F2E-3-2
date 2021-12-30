@@ -34,13 +34,16 @@ export default {
     },
     getAvailabilityNearByArray() {
       return this.$store.state.availabilityNearBy
+    },
+    getStationRents() {
+      return this.$store.state.availability
     }
   },
   watch: {
     getCurBikeGeometry: {
       deep: true,
       handler(val) {
-        if (val !== []) this.getBikePath(val)
+        if (val.length !== 0) this.getBikePath(val)
       }
     },
     getCurStationTarget: {
@@ -372,16 +375,6 @@ export default {
   border-radius: 50%
   position: relative
   animation: userPoint 0.5s both infinite alternate
-  // &:before
-  //   content: ''
-  //   position: absolute
-  //   left: 50%
-  //   top: 50%
-  //   transform: translate(-50%,-50%)
-  //   width: 1000px
-  //   height: 1000px
-  //   border-radius: 50%
-  //   background: rgba(#000,0.3)
 
 .textBlock
   position: absolute

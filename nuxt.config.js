@@ -1,17 +1,9 @@
 import path from 'path'
 
-const routerBase =
-  process.env.DEPLOY_ENV === 'GH_PAGES'
-    ? {
-        router: {
-          base: '/F2E-3-2/'
-        }
-    } : {}
-
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'F2E-3-2',
+    title: 'BikeMap',
     htmlAttrs: {
       lang: 'en'
     },
@@ -41,7 +33,6 @@ export default {
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
     '@/plugins/axios',
-    { src: "@plugins/vue2-leaflet-markercluster.js", mode: 'client' },
     '@/plugins/mapbox.js'
   ],
 
