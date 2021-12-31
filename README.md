@@ -1,6 +1,6 @@
 # BikeMap(單車地圖)
 ## 使用技術(Skill List)
-`Nuxt.js`(Vue.js SSR Framework)
+`Nuxt.js`: Vue.js SSR Framework
 
 Vuex(Vue.js State Manager)
 
