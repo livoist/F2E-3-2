@@ -225,6 +225,7 @@ export default {
       this.curMeters = val
     },
     getCurNearNameItem(item) {
+      this.isOpenFixedInfo = false
       this.$emit('isOpenLocation', false)
       this.$store.dispatch('getCurNearItem', item)
     },
