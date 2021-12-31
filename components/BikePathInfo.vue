@@ -1,6 +1,9 @@
 <template lang="pug">
 div
   .bikePathInfos(:class="{ 'active': isOpenBikePath }")
+    .selectBox
+      p 單車路線搜尋
+      p.slash BikePathSearch
     .selectBox.mb-30
       p 城市 / City
       CustomSelect.bikePath(
@@ -165,6 +168,11 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.selectBox.mb-30 > p
+  margin-top: 8px
+  @media (max-width: 575px)
+    margin-top: 2vmin
+
 .bikePathInfos
   background: #172532
   position: absolute
