@@ -4,6 +4,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   data() {
     return {
@@ -12,32 +14,26 @@ export default {
       mapInstance: null,
       mapMarker: null,
       mapPopup: null,
-      nearMarkers: [],
-      selfMarkers: []
+      nearStationMarkers: [],
+      nearRestaruantMarkers: [],
+      nearScenicSpotMarkers: [],
+      nearHotelMarkers: [],
+      selfPosMarker: []
     }
   },
   computed: {
-    getCurStationTarget() {
-      return this.$store.state.curTarget
-    },
-    getCurBikeGeometry() {
-      return this.$store.state.curBikePath
-    },
-    getCurNearByStation() {
-      return this.$store.state.stationNearBy
-    },
-    getUserPosition() {
-      return this.$store.state.userPos
-    },
-    getCurNearItem() {
-      return this.$store.state.nearNameItem
-    },
-    getAvailabilityNearByArray() {
-      return this.$store.state.availabilityNearBy
-    },
-    getStationRents() {
-      return this.$store.state.availability
-    }
+    ...mapState({
+      getCurStationTarget: 'curTarget',
+      getCurBikeGeometry: 'curBikePath',
+      getCurNearByStation: 'stationNearBy',
+      getUserPosition: 'userPos',
+      getCurNearItem: 'nearNameItem',
+      getAvailabilityNearByArray: 'availabilityNearBy',
+      getStationRents: 'availability',
+      getRestaruant: 'restaurantNearBy',
+      getScenicSpot: 'scenicSpotNearBy',
+      getHotel: 'hotelNearBy'
+    })
   },
   watch: {
     getCurBikeGeometry: {
@@ -64,6 +60,27 @@ export default {
       deep: true,
       handler(val) {
         if (val) this.getCurNearSelectMarker(val)
+      }
+    },
+    getRestaruant: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val.length > 0) this.getStationNearByRestaurant()
+      }
+    },
+    getScenicSpot: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val.length > 0) this.getStationNearByScenicSpot()
+      }
+    },
+    getHotel: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val.length > 0) this.getStationNearByHotel()
       }
     }
   },
@@ -97,7 +114,7 @@ export default {
       } = availabilityAry[targetMarker]
 
       // set marker
-      this.nearMarkers[targetMarker]
+      this.nearStationMarkers[targetMarker]
         .setPopup(
           this.mapPopup
             .setHTML(`
@@ -138,17 +155,73 @@ export default {
         }
       )
     },
+    createCustomPoint(type, item) {
+      const el = document.createElement('div')
+      const childText = document.createElement('div')
+      childText.innerHTML = item.name.length > 8 ? `${item.name.slice(0, 7)}...` : item.name
+
+      childText.classList.add('textBlock', type)
+      el.classList.add('marker', type, 'hidden')
+      el.appendChild(childText)
+
+      return el
+    },
+    getStationNearByRestaurant() {
+      if (this.nearRestaruantMarkers.length > 0) {
+        this.nearRestaruantMarkers.forEach(item => item.remove())
+        this.nearRestaruantMarkers = []
+      }
+
+      const result = this.getRestaruant.slice()
+      result.forEach(item => {
+        const el = this.createCustomPoint('restaurant', item)
+        const restaurantMarker = new this.$map.Marker(el)
+
+        restaurantMarker.setLngLat(item.pos).addTo(this.mapInstance)
+        this.nearRestaruantMarkers.push(restaurantMarker)
+      })
+    },
+    getStationNearByScenicSpot() {
+      if (this.nearScenicSpotMarkers.length > 0) {
+        this.nearScenicSpotMarkers.forEach(item => item.remove())
+        this.nearScenicSpotMarkers = []
+      }
+
+      const result = this.getScenicSpot.slice()
+      result.forEach(item => {
+        const el = this.createCustomPoint('scenicSpot', item)
+        const scenicSpotMarker = new this.$map.Marker(el)
+
+        scenicSpotMarker.setLngLat(item.pos).addTo(this.mapInstance)
+        this.nearScenicSpotMarkers.push(scenicSpotMarker)
+      })
+    },
+    getStationNearByHotel() {
+      if (this.nearHotelMarkers.length > 0) {
+        this.nearHotelMarkers.forEach(item => item.remove())
+        this.nearHotelMarkers = []
+      }
+
+      const result = this.getHotel.slice()
+      result.forEach(item => {
+        const el = this.createCustomPoint('hotel', item)
+        const hotelMarker = new this.$map.Marker(el)
+        
+        hotelMarker.setLngLat(item.pos).addTo(this.mapInstance)
+        this.nearHotelMarkers.push(hotelMarker)
+      })
+    },
     async getUserCurPosNearByStation(nearByAry) {
       // remove old nearMarker
-      if (this.nearMarkers.length > 0) {
-        this.nearMarkers.forEach(item => item.remove())
-        this.nearMarkers = []
+      if (this.nearStationMarkers.length > 0) {
+        this.nearStationMarkers.forEach(item => item.remove())
+        this.nearStationMarkers = []
       }
 
       // remove old selfMarker
-      if (this.selfMarkers.length > 0) {
-        this.selfMarkers.forEach(item => item.remove())
-        this.selfMarkers = []
+      if (this.selfPosMarker.length > 0) {
+        this.selfPosMarker.forEach(item => item.remove())
+        this.selfPosMarker = []
       }
   
       // custom selfMarker style
@@ -157,13 +230,13 @@ export default {
       childText.innerHTML = 'SELF'
 
       childText.classList.add('textBlock')
-      el.classList.add('selfMarker')
+      el.classList.add('marker', 'self')
       el.appendChild(childText)
 
       // add selfMarker on map
       const selfMarker = new this.$map.Marker(el)
       selfMarker.setLngLat(this.getUserPosition).addTo(this.mapInstance)
-      this.selfMarkers.push(selfMarker)
+      this.selfPosMarker.push(selfMarker)
 
       // add all nearMarker on map
       nearByAry.forEach(item => {
@@ -176,7 +249,7 @@ export default {
           .addTo(this.mapInstance)
 
         // save all nearMarker
-        this.nearMarkers.push(nearMarker)
+        this.nearStationMarkers.push(nearMarker)
       })
 
       // jump to self position
@@ -203,7 +276,7 @@ export default {
       this.mapInstance.jumpTo(
         {
           center: [target.pos.PositionLon, target.pos.PositionLat],
-          zoom: 18,
+          zoom: 14,
           speed: 2,
           curve: 1,
           duration: 5000,
@@ -367,20 +440,30 @@ export default {
   100%
     box-shadow: 0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3, 0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3
 
-.selfMarker
-  background: #172532
-  border: 3px solid #a3a3a3
+.marker
   width: 12px
   height: 12px
   border-radius: 50%
   position: relative
-  animation: userPoint 0.5s both infinite alternate
+  border: 3px solid #a3a3a3
+  transition: 0.3s
+  &.hidden
+    opacity: 0
+    visibility: hidden
+  &.self
+    background: #172532
+    animation: userPoint 0.5s both infinite alternate
+  &.restaurant
+    background: #EE3239
+  &.scenicSpot
+    background: #5EAA5F
+  &.hotel
+    background: #FECE00
 
 .textBlock
   position: absolute
   top: -42px
   width: 50px
-  height: 26px
   left: 50%
   transform: translateX(-50%)
   font-size: 12px
@@ -389,6 +472,11 @@ export default {
   background: #000
   color: #fff
   border-radius: 6px
+  &.self
+    width: 50px
+  &.restaurant,&.scenicSpot,&.hotel
+    min-width: 100px
+    padding: 0 5px
   &:after
     content: ''
     position: absolute
