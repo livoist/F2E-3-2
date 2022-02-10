@@ -9,6 +9,17 @@ div
     div
       | 未歸還 / NotReturn:
       span {{ notReturn }}
+    div.checkboxBlock
+      div
+        | 餐廳 / Restaurant:
+        input(type="checkbox" v-model="isOpenRestaurant")
+      div
+        | 景點 / ScenicSpot:
+        input(type="checkbox" v-model="isOpenScenicSpot")
+      div
+        | 住宿 / Hotel:
+        input(type="checkbox" v-model="isOpenHotel")
+
 
   .bikeRentInfos(:class="{ 'active': isOpenLocation }")
     .selectionContainer.basicSearch
@@ -147,10 +158,43 @@ export default {
       notReturn: 0,
       curMeters: 0,
       dynamicNearByInfo: {},
-      isOpenFixedInfo: false
+      isOpenFixedInfo: false,
+      isOpenRestaurant: false,
+      isOpenScenicSpot: false,
+      isOpenHotel: false
     }
   },
   watch: {
+    isOpenRestaurant: {
+      handler(val) {
+        const allRestaurant = document.querySelectorAll('.marker.restaurant')
+        if (!val) {
+          allRestaurant.forEach(item => item.classList.add('hidden'))
+        } else {
+          allRestaurant.forEach(item => item.classList.remove('hidden'))
+        }
+      }
+    },
+    isOpenScenicSpot: {
+      handler(val) {
+        const allScenicSpot = document.querySelectorAll('.marker.scenicSpot')
+        if (!val) {
+          allScenicSpot.forEach(item => item.classList.add('hidden'))
+        } else {
+          allScenicSpot.forEach(item => item.classList.remove('hidden'))
+        }
+      }
+    },
+    isOpenHotel: {
+      handler(val) {
+        const allHotel = document.querySelectorAll('.marker.hotel')
+        if (!val) {
+          allHotel.forEach(item => item.classList.add('hidden'))
+        } else {
+          allHotel.forEach(item => item.classList.remove('hidden'))
+        }
+      }
+    },
     // 是否清除舊的Info
     isClearInfo: {
       immediate: true,
@@ -162,7 +206,7 @@ export default {
     },
     curMeters: {
       handler(val) {
-        if (val) this.getStationNearByDistance(val)
+        if (val) this.getResultNearByPos(val)
       }
     },
     curCity: {
@@ -189,7 +233,9 @@ export default {
           this.canRent = 0
           this.notReturn = 0
           this.getCurCityMap()
-
+          this.getRestaurantNearPos(this.curCity, this.curTarget.pos)
+          this.getScenicSpotNearByPos(this.curCity, this.curTarget.pos)
+          this.getHotelNearByPos(this.curCity, this.curTarget.pos)
           setTimeout(() => {
             this.canRent = this.curRent.AvailableRentBikes
             this.notReturn = this.curRent.AvailableReturnBikes
@@ -224,6 +270,15 @@ export default {
     getCurMeters(val) {
       this.curMeters = val
     },
+    getRestaurantNearPos(city, pos) {
+      this.$store.dispatch('getRestaurantNearByPos', { city, pos })
+    },
+    getScenicSpotNearByPos(city, pos) {
+      this.$store.dispatch('getScenicSpotNearByPos', { city, pos })
+    },
+    getHotelNearByPos(city, pos) {
+      this.$store.dispatch('getHotelNearByPos', { city, pos })
+    },
     getCurNearNameItem(item) {
       this.isOpenFixedInfo = false
       this.$emit('isOpenLocation', false)
@@ -240,7 +295,7 @@ export default {
 
       if (target[0] !== undefined) return target[0][key]
     },
-    getStationNearByDistance(meter) {
+    getResultNearByPos(meter) {
       let searchCondition = {}
 
       if ("geolocation" in navigator) {
@@ -433,7 +488,8 @@ export default {
 .fixedBikeRentInfo
   position: fixed
   top: 0
-  left: 40%
+  left: 50%
+  transform: translateX(-50%)
   display: flex
   background: rgba(#08111A,0.75)
   padding: 6px 4px 8px
@@ -441,11 +497,12 @@ export default {
   opacity: 0
   visibility: hidden
   transition: 0.3s
+  white-space: nowrap
   @media (max-width: 575px)
     padding: 2vmin 1vmin
     flex-direction: column
-    left: 32%
     width: 46%
+    left: 76%
   &.active
     opacity: 1
     visibility: visible
@@ -453,6 +510,33 @@ export default {
     margin: 0 10px
     color: rgba(#fff,0.6)
     font-size: 14px
+    &.checkboxBlock
+      display: flex
+      @media (max-width: 575px)
+        flex-direction: column
+        align-items: flex-start
+      > div
+        display: flex
+        justify-content: center
+        align-items: center
+        position: relative
+        margin: 0 14px
+        &:nth-of-type(1):before
+          background: #EE3239
+        &:nth-of-type(2):before
+          background: #5EAA5F
+        &:nth-of-type(3):before
+          background: #FECE00
+        &:before
+          content: ''
+          width: 10px
+          height: 10px
+          border: 2px solid #3A5A69
+          border-radius: 50%
+          position: absolute
+          left: -16px
+          top: 50%
+          transform: translateY(-50%)
     @media (max-width: 575px)
       display: inline-block
       font-size: 3.5vmin
