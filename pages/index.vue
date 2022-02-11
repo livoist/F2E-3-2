@@ -108,9 +108,7 @@ export default {
       immediate: true,
       handler(val) {
         if (val) {
-          this.clearOldMarkers(this.selfPosMarker)
           this.clearOldMarkers(this.stationMarker)
-          this.clearOldMarkers(this.nearStationMarkers)
           this.clearOldMarkers(this.nearRestaruantMarkers)
           this.clearOldMarkers(this.nearScenicSpotMarkers)
           this.clearOldMarkers(this.nearHotelMarkers)
@@ -233,7 +231,10 @@ export default {
       return el
     },
     getStationNearByMarkers(type, markersInfo, markersArray) {
-      this.clearOldMarkers(markersArray)
+      if (markersArray.length > 0) {
+        markersArray.forEach(item => item.remove())
+        markersArray = []
+      }
 
       const result = markersInfo.slice()
       result.forEach(item => {
@@ -245,9 +246,16 @@ export default {
       })
     },
     getUserCurPosNearByStation(nearByAry) {
-      // remove old nearMarker and selfMarker
-      this.clearOldMarkers(this.nearStationMarkers)
-      this.clearOldMarkers(this.selfPosMarker)
+      // remove old nearMarker
+      if (this.nearStationMarkers.length > 0) {
+        this.nearStationMarkers.forEach(item => item.remove())
+        this.nearStationMarkers = []
+      }
+      // remove old selfMarker
+      if (this.selfPosMarker.length > 0) {
+        this.selfPosMarker.forEach(item => item.remove())
+        this.selfPosMarker = []
+      }
 
       // custom selfMarker style
       const el = this.createCustomPoint('self', 'SELF')
