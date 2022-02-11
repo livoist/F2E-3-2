@@ -9,17 +9,17 @@ div
     div
       | 未歸還 / NotReturn:
       span {{ notReturn }}
-    div.checkboxBlock
-      div
-        | 餐廳 / Restaurant:
-        input(type="checkbox" v-model="isOpenRestaurant")
-      div
-        | 景點 / ScenicSpot:
-        input(type="checkbox" v-model="isOpenScenicSpot")
-      div
-        | 住宿 / Hotel:
-        input(type="checkbox" v-model="isOpenHotel")
 
+    div.checkboxBlock
+      div(v-for="(item, idx) in checkboxs" :key="item.id")
+        label(:for="item.type") {{ item.name }}
+        input(
+          type="checkbox"
+          :name="item.type"
+          :id="item.type"
+          v-model="item.modelTarget"
+          @change="isShowStationNearByInfos(item.modelTarget, item.type)"
+        )
 
   .bikeRentInfos(:class="{ 'active': isOpenLocation }")
     .selectionContainer.basicSearch
@@ -66,7 +66,6 @@ div
       .result
         p {{ getCurNearByStation.length }} 租借站
         p {{ getCurNearByStation.length }} Near Station
-
       .detailInfo(v-if="getCurNearByStation.length !== 0")
         div(
           v-for="(item, index) in getCurNearByStation"
@@ -107,9 +106,7 @@ div
               br
               |
               span {{ getDynamicNearByInfo(item.id, 'UpdateTime') }}
-
       .notSelect(v-else-if="curMeters === 0") 尚未選擇距離
-
       .notFound(v-else)
         | 此距離範圍沒有租借站
         br
@@ -161,40 +158,27 @@ export default {
       isOpenFixedInfo: false,
       isOpenRestaurant: false,
       isOpenScenicSpot: false,
-      isOpenHotel: false
+      isOpenHotel: false,
+      checkboxs: [
+        {
+          name: '餐廳 / Restaurant',
+          type: 'restaurant',
+          modelTarget: false
+        },
+        {
+          name: '景點 / ScenicSpot',
+          type: 'scenicSpot',
+          modelTarget: false
+        },
+        {
+          name: '住宿 / Hotel',
+          type: 'hotel',
+          modelTarget: false
+        }
+      ]
     }
   },
   watch: {
-    isOpenRestaurant: {
-      handler(val) {
-        const allRestaurant = document.querySelectorAll('.marker.restaurant')
-        if (!val) {
-          allRestaurant.forEach(item => item.classList.add('hidden'))
-        } else {
-          allRestaurant.forEach(item => item.classList.remove('hidden'))
-        }
-      }
-    },
-    isOpenScenicSpot: {
-      handler(val) {
-        const allScenicSpot = document.querySelectorAll('.marker.scenicSpot')
-        if (!val) {
-          allScenicSpot.forEach(item => item.classList.add('hidden'))
-        } else {
-          allScenicSpot.forEach(item => item.classList.remove('hidden'))
-        }
-      }
-    },
-    isOpenHotel: {
-      handler(val) {
-        const allHotel = document.querySelectorAll('.marker.hotel')
-        if (!val) {
-          allHotel.forEach(item => item.classList.add('hidden'))
-        } else {
-          allHotel.forEach(item => item.classList.remove('hidden'))
-        }
-      }
-    },
     // 是否清除舊的Info
     isClearInfo: {
       immediate: true,
@@ -205,8 +189,12 @@ export default {
       }
     },
     curMeters: {
+      immediate: true,
       handler(val) {
-        if (val) this.getResultNearByPos(val)
+        if (val) {
+          this.isOpenFixedInfo = false
+          this.getResultNearByPos(val)
+        }
       }
     },
     curCity: {
@@ -232,14 +220,25 @@ export default {
         if (val) {
           this.canRent = 0
           this.notReturn = 0
+          this.checkboxs.forEach(item => item.modelTarget = false)
+
           this.getCurCityMap()
-          this.getRestaurantNearPos(this.curCity, this.curTarget.pos)
+          this.getRestaurantNearByPos(this.curCity, this.curTarget.pos)
           this.getScenicSpotNearByPos(this.curCity, this.curTarget.pos)
           this.getHotelNearByPos(this.curCity, this.curTarget.pos)
+
           setTimeout(() => {
             this.canRent = this.curRent.AvailableRentBikes
             this.notReturn = this.curRent.AvailableReturnBikes
           }, 500)
+        }
+      }
+    },
+    isOpenLocation: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          this.$store.dispatch('isClearInfoBikePath', true)
         }
       }
     }
@@ -270,7 +269,7 @@ export default {
     getCurMeters(val) {
       this.curMeters = val
     },
-    getRestaurantNearPos(city, pos) {
+    getRestaurantNearByPos(city, pos) {
       this.$store.dispatch('getRestaurantNearByPos', { city, pos })
     },
     getScenicSpotNearByPos(city, pos) {
@@ -322,6 +321,15 @@ export default {
 
       this.curRent = resource[0]
     },
+    isShowStationNearByInfos(val, type) {
+      const infos = document.querySelectorAll(`.marker.${type}`)
+
+      if (!val) {
+        infos.forEach(item => item.classList.add('hidden'))
+      } else {
+        infos.forEach(item => item.classList.remove('hidden'))
+      }
+    },
     async getAllStationInfo() {
       await this.$store.dispatch('getAllStation', this.curCity)
       this.stationNames = await this.$store.state.allStationName
@@ -346,22 +354,17 @@ export default {
 
 <style lang="sass">
 .bikeRentInfos
-  position: absolute
-  left: 120%
-  top: 0
-  z-index: -1
+  +setPosAbs(0,null,null,155%,-1)
   transform: translateY(-300%)
   transition: 0.5s ease-in-out
   &.active
     transform: translateY(0)
 
 .selectionContainer
+  +setFlex
   background: #172532
   width: 290px
   max-width: 100%
-  display: flex
-  justify-content: center
-  align-items: center
   flex-direction: column
   padding: 20px 0
   transform: translateY(-300%)
@@ -399,28 +402,23 @@ export default {
       @media (max-width: 575px)
         max-height: 26vh
       div
+        +setFlex(center,flex-start)
         border-top: 1px solid #fff
         padding: 10px
-        display: flex
         flex-direction: column
-        justify-content: center
-        align-items: flex-start
         position: relative
         cursor: pointer
         > *
             pointer-events: none
         &:after
           content: attr(data-idx)
-          position: absolute
+          +setSize(16px)
+          +setPosAbs(-1px,null,null,-16px)
           text-align: center
           line-height: 16px
-          width: 16px
-          height: 16px
           background: #fff
           color: #172532
           font-size: 12px
-          left: -16px
-          top: -1px
         p
           font-weight: normal
           font-size: 14px
@@ -431,10 +429,8 @@ export default {
           color: rgba(#fff,0.9)
 
 .selectBox
-  display: flex
+  +setFlex
   flex-direction: column
-  justify-content: center
-  align-items: center
   margin: 10px 0
   @media (max-width: 575px)
     margin: 2vmin 0
@@ -455,21 +451,16 @@ export default {
       &.slash
         &:after
           content: ''
-          position: absolute
-          left: 50%
-          bottom: -50%
+          +setPosAbs(null,null,-50%,50%)
+          +setSize(220px,1px)
           transform: translateX(-50%)
-          width: 220px
-          height: 1px
           background: #fff
 
 .detailInfo
   display: flex
   margin-top: 30px
   > div
-      display: flex
-      justify-content: center
-      align-items: center
+      +setFlex
       flex-direction: column
       text-align: center
       color: #a3a3a3
@@ -499,7 +490,7 @@ export default {
   transition: 0.3s
   white-space: nowrap
   @media (max-width: 575px)
-    padding: 2vmin 1vmin
+    padding: 3vmin 1vmin 2vmin
     flex-direction: column
     width: 46%
     left: 76%
@@ -510,40 +501,37 @@ export default {
     margin: 0 10px
     color: rgba(#fff,0.6)
     font-size: 14px
+    @media (max-width: 575px)
+      margin: 0 2.5vmin 0.75vmin
+      display: inline-block
+      font-size: 3.3vmin
     &.checkboxBlock
       display: flex
       @media (max-width: 575px)
+        margin-top: 2vmin
         flex-direction: column
         align-items: flex-start
       > div
-        display: flex
-        justify-content: center
-        align-items: center
-        position: relative
-        margin: 0 14px
-        &:nth-of-type(1):before
-          background: #EE3239
-        &:nth-of-type(2):before
-          background: #5EAA5F
-        &:nth-of-type(3):before
-          background: #FECE00
-        &:before
-          content: ''
-          width: 10px
-          height: 10px
-          border: 2px solid #3A5A69
-          border-radius: 50%
-          position: absolute
-          left: -16px
-          top: 50%
-          transform: translateY(-50%)
-    @media (max-width: 575px)
-      display: inline-block
-      font-size: 3.5vmin
+          +setFlex
+          position: relative
+          margin: 0 14px
+          @media (max-width: 575px)
+            margin-bottom: 0.5vmin
+          &:nth-of-type(1):before
+            background: #EE3239
+          &:nth-of-type(2):before
+            background: #5EAA5F
+          &:nth-of-type(3):before
+            background: #FECE00
+          &:before
+            content: ''
+            +setSize(10px)
+            +setPosAbs(50%,null,null,-16px)
+            border: 2px solid #3A5A69
+            border-radius: 50%
+            transform: translateY(-50%)
     span
       color: rgba(#fff,0.95)
       margin-left: 10px
-      @media (max-width: 575px)
-        font-size: 4vmin
 
 </style>

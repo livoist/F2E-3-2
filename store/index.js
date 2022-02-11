@@ -23,6 +23,19 @@ const GET_NEAR_SCENICSPOT = 'GET_NEAR_SCENICSPOT'
 // get nearBy hotel
 const GET_NEAR_HOTEL = 'GET_NEAR_HOTEL'
 
+// is clear other markers
+const IS_CLEAR_OTHER_MARKERS = 'IS_CLEAR_OTHER_MARKERS'
+
+// is clear bike path
+const IS_CLEAR_BIKE_PATH = 'IS_CLEAR_BIKE_PATH'
+
+const getStationNearByUrl = (type, city, lat, lon) => {
+  const endpoint = `Tourism/${type}/${city}`
+  const url = `${endpoint}?$top=10&$spatialFilter=nearby(${lat},${lon}, 3000)&$format=JSON`
+
+  return url
+}
+
 const state = () => ({
   station: '',
   availability: '',
@@ -31,14 +44,15 @@ const state = () => ({
   availabilityNearBy: [],
   allStationName: '',
   curCityMap: [],
-  initMapBox: '',
   curTarget: '',
   curBikePath: [],
   userPos: [],
   nearNameItem: '',
   restaurantNearBy: [],
   scenicSpotNearBy: [],
-  hotelNearBy: []
+  hotelNearBy: [],
+  isClearMakers: false,
+  isClearBikePath: false
 })
 
 const mutations = {
@@ -83,10 +97,22 @@ const mutations = {
   },
   [GET_NEAR_HOTEL](state, result) {
     state.hotelNearBy = result
+  },
+  [IS_CLEAR_OTHER_MARKERS](state, bool) {
+    state.isClearMakers = bool
+  },
+  [IS_CLEAR_BIKE_PATH](state, bool) {
+    state.isClearBikePath = bool
   }
 }
 
 const actions = {
+  isClearInfoBikePath({ commit }, bool) {
+    commit(IS_CLEAR_BIKE_PATH, bool)
+  },
+  isClearInfoMarker({ commit }, bool) {
+    commit(IS_CLEAR_OTHER_MARKERS, bool)
+  },
   getCurNearItem({ commit }, item) {
     commit('GET_CUR_NEAR_ITEM', item)
   },
@@ -171,13 +197,8 @@ const actions = {
     const { PositionLat, PositionLon } = condition.pos
     const city = condition.city
 
-    const url = `Tourism/Restaurant/${city}`
-
-    const res = await this.$axios.$get(
-      `${url}?$top=10&$spatialFilter=nearby(${PositionLat}, ${PositionLon}, 2000)&$format=JSON`
-    )
-
-    console.log('Restaurant', res)
+    const result = getStationNearByUrl('Restaurant', city, PositionLat, PositionLon)
+    const res = await this.$axios.$get(result)
 
     const newResultMap = res.map(item => {
       const { Position, Address, RestaurantName, Phone, OpenTime } = item
@@ -192,24 +213,14 @@ const actions = {
       }
     })
 
-    console.log('map', newResultMap)
-    console.log(condition.pos)
-    // console.log('Position', Position)
-    // console.log('Address', Address)
-    // console.log('RestaurantName', RestaurantName)
-    // console.log('Phone', Phone)
-    // console.log('OpenTime', OpenTime)
     commit(GET_NEAR_RESTAURANT, newResultMap)
   },
   async getScenicSpotNearByPos({ commit }, condition) {
     const { PositionLat, PositionLon } = condition.pos
     const city = condition.city
 
-    const url = `Tourism/ScenicSpot/${city}`
-
-    const res = await this.$axios.$get(
-      `${url}?$top=10&$spatialFilter=nearby(${PositionLat}, ${PositionLon}, 2000)&$format=JSON`
-    )
+    const result = getStationNearByUrl('ScenicSpot', city, PositionLat, PositionLon)
+    const res = await this.$axios.$get(result)
 
     const newResultMap = res.map(item => {
       const { Position, Address, ScenicSpotName, Phone, OpenTime } = item
@@ -224,19 +235,14 @@ const actions = {
       }
     })
 
-    console.log('scenicSpot', res)
-
     commit(GET_NEAR_SCENICSPOT, newResultMap)
   },
   async getHotelNearByPos({ commit }, condition) {
     const { PositionLat, PositionLon } = condition.pos
     const city = condition.city
 
-    const url = `Tourism/Hotel/${city}`
-
-    const res = await this.$axios.$get(
-      `${url}?$top=10&$spatialFilter=nearby(${PositionLat}, ${PositionLon}, 2000)&$format=JSON`
-    )
+    const result = getStationNearByUrl('Hotel', city, PositionLat, PositionLon)
+    const res = await this.$axios.$get(result)
 
     const newResultMap = res.map(item => {
       const { Position, Address, HotelName, Phone, OpenTime } = item
@@ -250,8 +256,6 @@ const actions = {
         open: OpenTime
       }
     })
-
-    console.log('hotel', res)
 
     commit(GET_NEAR_HOTEL, newResultMap)
   }

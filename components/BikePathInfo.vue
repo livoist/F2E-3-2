@@ -41,9 +41,7 @@ div
 
     div(v-if="curSelectBikePathInfo.name")
       | 路線 / PathName : 
-      span
-        br
-        | {{ curSelectBikePathInfo.name }}
+      span {{ curSelectBikePathInfo.name }}
 
     div(v-if="curSelectBikePathInfo.length")
       | 總長 / Length : 
@@ -117,6 +115,12 @@ export default {
           this.isOpenBikePathDetail = false
         }
       }
+    },
+    isOpenBikePath: {
+      immediate: true,
+      handler(val) {
+        if (val) this.$store.dispatch('isClearInfoMarker', true)
+      }
     }
   },
   methods: {
@@ -166,10 +170,8 @@ export default {
 
 <style lang="sass" scoped>
 .bikePathInfos
+  +setPosAbs(0,null,null,148%)
   background: #172532
-  position: absolute
-  left: 120%
-  top: 0
   min-width: 400px
   padding: 20px
   border-radius: 0 0 8px 8px
@@ -208,21 +210,17 @@ export default {
     padding: 5vmin 5vmin 1vmin 6vmin
   &:after
     content: attr(data-idx)
+    +setPosAbs(0,null,null,0)
+    +setSize(24px)
     color: #172532
-    position: absolute
-    left: 0
-    top: 0
     background: #a3a3a3
-    width: 24px
-    height: 24px
     border-radius: 0 0 8px 0
     text-align: center
     line-height: 24px
     font-weight: bold
     font-size: 14px
     @media (max-width: 575px)
-      width: 5vmin
-      height: 5vmin
+      +setSize(5vmin)
       font-size: 12px
       line-height: 1.5
   &:last-of-type
@@ -257,7 +255,7 @@ export default {
   @media (max-width: 575px)
     flex-direction: column
     padding: 3vmin 3.5vmin
-    left: 58.5%
+    left: 60%
     min-width: 73%
   &.active
     opacity: 1
@@ -271,6 +269,7 @@ export default {
     @media (max-width: 575px)
       font-size: 3.5vmin
       white-space: initial
+      margin: 1vmin 2vmin
     br
       display: none
       @media (max-width: 575px)
@@ -283,17 +282,13 @@ export default {
         margin-left: 6.5vmin
       &:before
         content: ''
-        width: 10px
-        height: 10px
+        +setSize(10px)
+        +setPosAbs(3px,null,null,-20px)
         border: 2px solid #3A5A69
         border-radius: 50%
-        position: absolute
-        left: -20px
-        top: 3px
         @media (max-width: 575px)
+          +setSize(2vmin)
           top: 1vmin
-          width: 2vmin
-          height: 2vmin
           left: -4vmin
     &.start:before
       background: #FEC804

@@ -14,11 +14,12 @@ export default {
       mapInstance: null,
       mapMarker: null,
       mapPopup: null,
+      selfPosMarker: [],
+      stationMarker: [],
       nearStationMarkers: [],
       nearRestaruantMarkers: [],
       nearScenicSpotMarkers: [],
       nearHotelMarkers: [],
-      selfPosMarker: []
     }
   },
   computed: {
@@ -32,7 +33,9 @@ export default {
       getStationRents: 'availability',
       getRestaruant: 'restaurantNearBy',
       getScenicSpot: 'scenicSpotNearBy',
-      getHotel: 'hotelNearBy'
+      getHotel: 'hotelNearBy',
+      isClearMarkers: 'isClearMakers',
+      isClearBikePath: 'isClearBikePath'
     })
   },
   watch: {
@@ -66,21 +69,64 @@ export default {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val.length > 0) this.getStationNearByRestaurant()
+        if (val.length > 0) {
+          this.getStationNearByMarkers(
+            'restaurant',
+            this.getRestaruant,
+            this.nearRestaruantMarkers
+          )
+        }
       }
     },
     getScenicSpot: {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val.length > 0) this.getStationNearByScenicSpot()
+        if (val.length > 0) {
+          this.getStationNearByMarkers(
+            'scenicSpot',
+            this.getScenicSpot,
+            this.nearScenicSpotMarkers
+          )
+        }
       }
     },
     getHotel: {
       immediate: true,
       deep: true,
       handler(val) {
-        if (val.length > 0) this.getStationNearByHotel()
+        if (val.length > 0) {
+          this.getStationNearByMarkers(
+            'hotel',
+            this.getHotel,
+            this.nearHotelMarkers
+          )
+        }
+      }
+    },
+    isClearMarkers: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          this.clearOldMarkers(this.selfPosMarker)
+          this.clearOldMarkers(this.stationMarker)
+          this.clearOldMarkers(this.nearStationMarkers)
+          this.clearOldMarkers(this.nearRestaruantMarkers)
+          this.clearOldMarkers(this.nearScenicSpotMarkers)
+          this.clearOldMarkers(this.nearHotelMarkers)
+
+          this.$store.dispatch('isClearInfoMarker', false)
+        }
+      }
+    },
+    isClearBikePath: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          this.clearBikePath()
+
+          this.$store.dispatch('isClearInfoBikePath', false)
+        }
       }
     }
   },
@@ -155,83 +201,56 @@ export default {
         }
       )
     },
+    clearOldMarkers(targets) {
+      if (targets.length > 0) {
+        targets.forEach(item => item.remove())
+        targets = []
+      } return
+    },
+    clearBikePath() {
+      // update / remove source and layer
+      const sourceTargets = ['route', 'point-start', 'point-end']
+      sourceTargets.forEach(item => {
+        this.mapInstance.getLayer(item) && this.mapInstance.removeLayer(item)
+        this.mapInstance.getSource(item) && this.mapInstance.removeSource(item)
+      })
+    },
     createCustomPoint(type, item) {
       const el = document.createElement('div')
       const childText = document.createElement('div')
-      childText.innerHTML = item.name.length > 8 ? `${item.name.slice(0, 7)}...` : item.name
+  
+      if (item === 'SELF') {
+        childText.innerHTML = item
+        el.classList.add('marker', type)
+      } else {
+        childText.innerHTML = item.name.length > 8 ? `${item.name.slice(0, 7)}...` : item.name
+        el.classList.add('marker', type, 'hidden')
+      }
 
       childText.classList.add('textBlock', type)
-      el.classList.add('marker', type, 'hidden')
       el.appendChild(childText)
 
       return el
     },
-    getStationNearByRestaurant() {
-      if (this.nearRestaruantMarkers.length > 0) {
-        this.nearRestaruantMarkers.forEach(item => item.remove())
-        this.nearRestaruantMarkers = []
-      }
+    getStationNearByMarkers(type, markersInfo, markersArray) {
+      this.clearOldMarkers(markersArray)
 
-      const result = this.getRestaruant.slice()
+      const result = markersInfo.slice()
       result.forEach(item => {
-        const el = this.createCustomPoint('restaurant', item)
-        const restaurantMarker = new this.$map.Marker(el)
+        const el = this.createCustomPoint(type, item)
+        const markers = new this.$map.Marker(el)
 
-        restaurantMarker.setLngLat(item.pos).addTo(this.mapInstance)
-        this.nearRestaruantMarkers.push(restaurantMarker)
+        markers.setLngLat(item.pos).addTo(this.mapInstance)
+        this.nearRestaruantMarkers.push(markers)
       })
     },
-    getStationNearByScenicSpot() {
-      if (this.nearScenicSpotMarkers.length > 0) {
-        this.nearScenicSpotMarkers.forEach(item => item.remove())
-        this.nearScenicSpotMarkers = []
-      }
+    getUserCurPosNearByStation(nearByAry) {
+      // remove old nearMarker and selfMarker
+      this.clearOldMarkers(this.nearStationMarkers)
+      this.clearOldMarkers(this.selfPosMarker)
 
-      const result = this.getScenicSpot.slice()
-      result.forEach(item => {
-        const el = this.createCustomPoint('scenicSpot', item)
-        const scenicSpotMarker = new this.$map.Marker(el)
-
-        scenicSpotMarker.setLngLat(item.pos).addTo(this.mapInstance)
-        this.nearScenicSpotMarkers.push(scenicSpotMarker)
-      })
-    },
-    getStationNearByHotel() {
-      if (this.nearHotelMarkers.length > 0) {
-        this.nearHotelMarkers.forEach(item => item.remove())
-        this.nearHotelMarkers = []
-      }
-
-      const result = this.getHotel.slice()
-      result.forEach(item => {
-        const el = this.createCustomPoint('hotel', item)
-        const hotelMarker = new this.$map.Marker(el)
-        
-        hotelMarker.setLngLat(item.pos).addTo(this.mapInstance)
-        this.nearHotelMarkers.push(hotelMarker)
-      })
-    },
-    async getUserCurPosNearByStation(nearByAry) {
-      // remove old nearMarker
-      if (this.nearStationMarkers.length > 0) {
-        this.nearStationMarkers.forEach(item => item.remove())
-        this.nearStationMarkers = []
-      }
-
-      // remove old selfMarker
-      if (this.selfPosMarker.length > 0) {
-        this.selfPosMarker.forEach(item => item.remove())
-        this.selfPosMarker = []
-      }
-  
       // custom selfMarker style
-      const el = document.createElement('div')
-      const childText = document.createElement('div')
-      childText.innerHTML = 'SELF'
-
-      childText.classList.add('textBlock')
-      el.classList.add('marker', 'self')
-      el.appendChild(childText)
+      const el = this.createCustomPoint('self', 'SELF')
 
       // add selfMarker on map
       const selfMarker = new this.$map.Marker(el)
@@ -267,11 +286,15 @@ export default {
       )
     },
     getBikeStationMarker(target) {
+      this.clearOldMarkers(this.stationMarker)
+
       this.mapMarker
         .setLngLat([target.pos.PositionLon, target.pos.PositionLat])
         .setPopup(this.mapPopup.setHTML(target.address))
         .addTo(this.mapInstance)
         .togglePopup(true)
+
+      this.stationMarker.push(this.mapMarker)
 
       this.mapInstance.jumpTo(
         {
@@ -287,12 +310,8 @@ export default {
       )
     },
     getBikePath(path) {
-      // update source and layer
-      const sourceTargets = ['route', 'point-start', 'point-end']
-      sourceTargets.forEach(item => {
-        this.mapInstance.getLayer(item) && this.mapInstance.removeLayer(item)
-        this.mapInstance.getSource(item) && this.mapInstance.removeSource(item)
-      })
+      // clear bike path
+      this.clearBikePath()
 
       // bikePath source
       this.mapInstance.addSource("route", {
@@ -441,8 +460,7 @@ export default {
     box-shadow: 0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3, 0 0 4px #a3a3a3,0 0 4px #a3a3a3,0 0 4px #a3a3a3
 
 .marker
-  width: 12px
-  height: 12px
+  +setSize(12px)
   border-radius: 50%
   position: relative
   border: 3px solid #a3a3a3
@@ -461,10 +479,8 @@ export default {
     background: #FECE00
 
 .textBlock
-  position: absolute
-  top: -42px
+  +setPosAbs(-42px,null,null,50%)
   width: 50px
-  left: 50%
   transform: translateX(-50%)
   font-size: 12px
   text-align: center
@@ -479,14 +495,11 @@ export default {
     padding: 0 5px
   &:after
     content: ''
-    position: absolute
-    width: 0
-    height: 0
+    +setPosAbs(null,null,-8px,50%)
+    +setSize(0)
     border-style: solid
     border-width: 8px 5px 0 5px
     border-color: #000 transparent transparent transparent
-    left: 50%
     transform: translateX(-50%)
-    bottom: -8px
 
 </style>

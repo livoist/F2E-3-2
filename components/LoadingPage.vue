@@ -12,14 +12,11 @@ export default {
 
 <style lang="sass" scoped>
 .loading-page
+  +setSize(100vw,100vh)
+  +setFlex
   position: fixed
   top: 0
   left: 0
-  width: 100vw
-  height: 100vh
-  display: flex
-  justify-content: center
-  align-items: center
   background: rgba(255, 255, 255, 0.8)
   font-size: 30px
   opacity: 0
