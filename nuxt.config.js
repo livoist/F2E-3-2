@@ -46,8 +46,16 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     '@nuxtjs/axios',
-    'nuxt-leaflet'
+    'nuxt-leaflet',
+    '@nuxtjs/style-resources'
   ],
+
+  // global mixin
+  styleResources: {
+    sass: [
+      '@/assets/css/mixin.sass',
+    ]
+  },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
