@@ -87,9 +87,8 @@ export default {
     height: auto
 
 .searchBtns
-  display: flex
+  +setFlex
   flex-direction: column
-  align-items: center
 
 .locationIcon,.bikePathIcon
   position: relative
@@ -102,8 +101,7 @@ export default {
   &:hover,&.active
     background: #172532
   .icon
-    width: 34px
-    height: 28px
+    +setSize(34px,28px)
     background-size: 100% 100%
     pointer-events: none
     @media (max-width: 575px)

@@ -1,0 +1,16 @@
+@mixin setSize($w, $h: $w)
+  width: $w,
+  height: $h
+
+@mixin setPosAbs($t, $r, $b, $l, $z: 0)
+  position: absolute
+  top: $t
+  right: $r
+  bottom: $b
+  left: $l
+  z-index: $z
+
+@mixin setFlex($j: center, $a: center)
+  display: flex
+  justify-content: $j
+  align-items: $a

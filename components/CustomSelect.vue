@@ -123,20 +123,13 @@ export default {
   @media (max-width: 575px)
     width: 47vmin
   .toggleArrow
-    position: absolute
-    top: 50%
-    right: -10%
-    width: 0
-    height: 0
+    +setPosAbs(50%,-10%,null,null)
+    +setSize(0)
     border-left: 4px solid transparent
     border-right: 4px solid transparent
     border-top: 9px solid #a3a3a3
     transform: translateY(-50%) rotateZ(0deg) translateY(0px)
     transition: 0.3s cubic-bezier(0.59, 1.39, 0.37, 1.01)
-    // +iphone-width
-    //   border-left-width: 1.5vmin
-    //   border-right-width: 1.5vmin
-    //   border-top-width: 3vmin
     &.expanded
       transform: rotateZ(180deg) translateY(50%)
   .label
@@ -165,8 +158,9 @@ export default {
     border-bottom: 1px solid #7e7e7e
     &:last-of-type
       border: none
-    // +iphone-width
-    //   font-size: 3vmin
+    @media (max-width: 575px)
+      font-size: 3.25vmin
+      padding: 2.25vmin
     &:hover
       background: #7e7e7e
       color: #fff
