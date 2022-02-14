@@ -10,7 +10,7 @@ const GET_CUR_BIKE_PATH = 'GET_CUR_BIKE_PATH'
 const GET_USER_POSITION = 'GET_USER_POSITION'
 const GET_CUR_NEAR_ITEM = 'GET_CUR_NEAR_ITEM'
 
-// advanced
+// ---Advanced--- //
 const GET_BIKE_STATION_NEAR_BY = 'GET_BIKE_STATION_NEAR_BY'
 const GET_BIKE_AVAILABILITY_NEAR_BY = 'GET_BIKE_AVAILABILITY_NEAR_BY'
 
@@ -28,6 +28,12 @@ const IS_CLEAR_OTHER_MARKERS = 'IS_CLEAR_OTHER_MARKERS'
 
 // is clear bike path
 const IS_CLEAR_BIKE_PATH = 'IS_CLEAR_BIKE_PATH'
+
+// is change basic station select
+const IS_CHANGE_BASIC_SELECT = 'IS_CHANGE_BASIC_SELECT'
+
+// is loading
+const IS_LOADING = 'IS_LOADING'
 
 const getStationNearByUrl = (type, city, lat, lon) => {
   const endpoint = `Tourism/${type}/${city}`
@@ -52,7 +58,9 @@ const state = () => ({
   scenicSpotNearBy: [],
   hotelNearBy: [],
   isClearMakers: false,
-  isClearBikePath: false
+  isClearBikePath: false,
+  basicSelect: false,
+  loading: false
 })
 
 const mutations = {
@@ -103,10 +111,22 @@ const mutations = {
   },
   [IS_CLEAR_BIKE_PATH](state, bool) {
     state.isClearBikePath = bool
+  },
+  [IS_CHANGE_BASIC_SELECT](state, bool) {
+    state.basicSelect = bool
+  },
+  [IS_LOADING](state, bool) {
+    state.loading = bool
   }
 }
 
 const actions = {
+  isLoading({ commit }, bool) {
+    commit(IS_LOADING, bool)
+  },
+  changeBasicSelect({ commit }, bool) {
+    commit(IS_CHANGE_BASIC_SELECT, bool)
+  },
   isClearInfoBikePath({ commit }, bool) {
     commit(IS_CLEAR_BIKE_PATH, bool)
   },

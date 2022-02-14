@@ -6,7 +6,11 @@
 
 <script>
 export default {
-  props: ['isLoading']
+  computed: {
+    isLoading() {
+      return this.$store.state.loading
+    }
+  }
 }
 </script>
 
@@ -25,6 +29,7 @@ export default {
   font-weight: bold
   letter-spacing: 8px
   color: #7e7e7e
+  z-index: 100
   @media (max-width: 575px)
     font-size: 5.5vmin
   &.loading

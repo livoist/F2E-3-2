@@ -18,6 +18,7 @@
   BikeRentInfo(
     :isOpenLocation="isOpenLocation"
     :isClearInfo="isOpenBikePath"
+    :isOpenRentDetailInfo="isOpenRentDetailInfo"
     @isOpenLocation="getLocationState"
     @isLoading="getIsLoading"
   )
@@ -45,7 +46,27 @@ export default {
       isOpenLocation: false,
       isOpenBikePath: false,
       isLoading: false,
+      isOpenRentDetailInfo: false,
       curMenu: ''
+    }
+  },
+  watch: {
+    getIsChangeBasicSelect: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          this.isOpenLocation = false
+          this.isOpenBikePath = false
+          this.isOpenRentDetailInfo = true
+        } else {
+          this.isOpenRentDetailInfo = false
+        }
+      }
+    }
+  },
+  computed: {
+    getIsChangeBasicSelect() {
+      return this.$store.state.basicSelect
     }
   },
   methods: {

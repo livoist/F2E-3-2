@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 export default {
   data() {
@@ -35,7 +35,8 @@ export default {
       getScenicSpot: 'scenicSpotNearBy',
       getHotel: 'hotelNearBy',
       isClearMarkers: 'isClearMakers',
-      isClearBikePath: 'isClearBikePath'
+      isClearBikePath: 'isClearBikePath',
+      getBasicSelect: 'basicSelect'
     })
   },
   watch: {
@@ -45,11 +46,31 @@ export default {
         if (val.length !== 0) this.getBikePath(val)
       }
     },
-    getCurStationTarget: {
+    getBasicSelect: {
       deep: true,
-      immediate: true,
       handler(val) {
-        if (val !== '') this.getBikeStationMarker(val)
+        if (val) {
+          this.getBikeStationMarker(this.getCurStationTarget)
+          this.changeBasicSelect(false)
+
+          this.getStationNearByMarkers(
+            'restaurant',
+            this.getRestaruant,
+            this.nearRestaruantMarkers
+          )
+
+          this.getStationNearByMarkers(
+            'scenicSpot',
+            this.getScenicSpot,
+            this.nearScenicSpotMarkers
+          )
+
+          this.getStationNearByMarkers(
+            'hotel',
+            this.getHotel,
+            this.nearHotelMarkers
+          )
+        }
       }
     },
     getCurNearByStation: {
@@ -113,7 +134,7 @@ export default {
           this.clearOldMarkers(this.nearScenicSpotMarkers)
           this.clearOldMarkers(this.nearHotelMarkers)
 
-          this.$store.dispatch('isClearInfoMarker', false)
+          this.isClearInfoMarker(false)
         }
       }
     },
@@ -123,12 +144,18 @@ export default {
         if (val) {
           this.clearBikePath()
 
-          this.$store.dispatch('isClearInfoBikePath', false)
+          this.isClearInfoBikePath(false)
         }
       }
     }
   },
   methods: {
+    ...mapActions([
+      'changeBasicSelect',
+      'isClearInfoMarker',
+      'isClearInfoBikePath',
+      'getAllStation'
+    ]),
     initMapBox() {
       this.mapInstance = new this.$map.Map({
         accessToken: 'pk.eyJ1IjoiYmVubGFpIiwiYSI6ImNrdzRib2FzYTAydTQyb3JoaHU4MGVzcWoifQ.j-bTKoCaWwbV4Ldqvy2Vrg',
@@ -439,7 +466,7 @@ export default {
       })
     },
     async getBikeStation(city) {
-      await this.$store.dispatch('getAllStation', city)
+      await this.getAllStation(city)
       this.station = this.$store.state.station
     }
   },

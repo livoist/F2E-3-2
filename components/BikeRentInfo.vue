@@ -1,7 +1,7 @@
 <template lang="pug">
 div
   .fixedBikeRentInfo(
-    :class="{ 'active': (isOpenFixedInfo && !isOpenLocation) }"
+    :class="{ 'active': isOpenFixedInfo && !isOpenLocation }"
   )
     div
       | 可租借 / CanRent:
@@ -71,7 +71,7 @@ div
           v-for="(item, index) in getCurNearByStation"
           :key="item.id"
           :data-idx="index + 1"
-          @click="getCurNearNameItem(item)"
+          @click="getCurNearNameItemInfo(item)"
         )
           p
             | 中文站名 / Name-zh :
@@ -115,6 +115,8 @@ div
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
   name: 'BikeRentInfo',
   props: {
@@ -123,6 +125,10 @@ export default {
       default: false
     },
     isClearInfo: {
+      type: Boolean,
+      default: false
+    },
+    isOpenRentDetailInfo: {
       type: Boolean,
       default: false
     }
@@ -148,7 +154,6 @@ export default {
       curSelect: '',
       curTarget: '',
       stationNames: [],
-      isLoading: false,
       isReloading: false,
       canRent: 0,
       curRents: '',
@@ -156,9 +161,6 @@ export default {
       curMeters: 0,
       dynamicNearByInfo: {},
       isOpenFixedInfo: false,
-      isOpenRestaurant: false,
-      isOpenScenicSpot: false,
-      isOpenHotel: false,
       checkboxs: [
         {
           name: '餐廳 / Restaurant',
@@ -179,6 +181,12 @@ export default {
     }
   },
   watch: {
+    isOpenRentDetailInfo: {
+      immediate: true,
+      handler(val) {
+        if (val) this.isOpenFixedInfo = true
+      }
+    },
     // 是否清除舊的Info
     isClearInfo: {
       immediate: true,
@@ -203,14 +211,7 @@ export default {
         if (val) {
           this.canRent = 0
           this.notReturn = 0
-          this.$emit('isLoading', true)
-          this.isReloading = true
           this.getAllStationInfo()
-
-          setTimeout(() => {
-            this.isReloading = false
-            this.$emit('isLoading', false)
-          }, 1000)
         }
       }
     },
@@ -223,9 +224,9 @@ export default {
           this.checkboxs.forEach(item => item.modelTarget = false)
 
           this.getCurCityMap()
-          this.getRestaurantNearByPos(this.curCity, this.curTarget.pos)
-          this.getScenicSpotNearByPos(this.curCity, this.curTarget.pos)
-          this.getHotelNearByPos(this.curCity, this.curTarget.pos)
+          this.getRestaurantNearByPosInfo(this.curCity, this.curTarget.pos)
+          this.getScenicSpotNearByPosInfo(this.curCity, this.curTarget.pos)
+          this.getHotelNearByPosInfo(this.curCity, this.curTarget.pos)
 
           setTimeout(() => {
             this.canRent = this.curRent.AvailableRentBikes
@@ -239,6 +240,7 @@ export default {
       handler(val) {
         if (val) {
           this.$store.dispatch('isClearInfoBikePath', true)
+          this.checkboxs.forEach(item => item.modelTarget = false)
         }
       }
     }
@@ -260,31 +262,45 @@ export default {
     }
   },
   methods: {
+    ...mapActions([
+      'isLoading',
+      'changeBasicSelect',
+      'getRestaurantNearByPos',
+      'getScenicSpotNearByPos',
+      'getHotelNearByPos',
+      'getCurNearItem',
+      'getAvailabilityNearBy',
+      'getStationNearBy',
+      'getAllStation',
+      'getAvailability',
+      'getCurTarget'
+    ]),
     getCurCity(val) {
       this.curCity = val
     },
     getCurSelect(val) {
       this.curSelect = val
+      this.changeBasicSelect(true)
     },
     getCurMeters(val) {
       this.curMeters = val
     },
-    getRestaurantNearByPos(city, pos) {
-      this.$store.dispatch('getRestaurantNearByPos', { city, pos })
+    getRestaurantNearByPosInfo(city, pos) {
+      this.getRestaurantNearByPos({ city, pos })
     },
-    getScenicSpotNearByPos(city, pos) {
-      this.$store.dispatch('getScenicSpotNearByPos', { city, pos })
+    getScenicSpotNearByPosInfo(city, pos) {
+      this.getScenicSpotNearByPos({ city, pos })
     },
-    getHotelNearByPos(city, pos) {
-      this.$store.dispatch('getHotelNearByPos', { city, pos })
+    getHotelNearByPosInfo(city, pos) {
+      this.getHotelNearByPos({ city, pos })
     },
-    getCurNearNameItem(item) {
+    getCurNearNameItemInfo(item) {
       this.isOpenFixedInfo = false
       this.$emit('isOpenLocation', false)
-      this.$store.dispatch('getCurNearItem', item)
+      this.getCurNearItem(item)
     },
     getDynamicNearBy(condition) {
-      this.$store.dispatch('getAvailabilityNearBy', condition)
+      this.getAvailabilityNearBy(condition)
     },
     getDynamicNearByInfo(id, key) {
       const targets = this.getDynamicNearByArray
@@ -306,7 +322,7 @@ export default {
             distance: meter
           }
 
-          this.$store.dispatch('getStationNearBy', searchCondition)
+          this.getStationNearBy(searchCondition)
           this.getDynamicNearBy(searchCondition)
         })
       }
@@ -331,12 +347,18 @@ export default {
       }
     },
     async getAllStationInfo() {
-      await this.$store.dispatch('getAllStation', this.curCity)
+      this.isReloading = true
+      this.isLoading(true)
+
+      await this.getAllStation(this.curCity)
       this.stationNames = await this.$store.state.allStationName
       await this.getAllStationRentBike()
+
+      this.isReloading = false
+      this.isLoading(false)
     },
     async getAllStationRentBike() {
-      await this.$store.dispatch('getAvailability', this.curCity)
+      await this.getAvailability(this.curCity)
       this.curRents = this.$store.state.availability
     },
     async getCurCityMap() {
@@ -345,7 +367,7 @@ export default {
       const target = cityMap.filter(item => item.name === this.curSelect)
       this.curTarget = target[0]
 
-      await this.$store.dispatch('getCurTarget', this.curTarget)
+      await this.getCurTarget(this.curTarget)
       this.getCurRent()
     },
   }

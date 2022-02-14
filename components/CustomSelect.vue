@@ -1,8 +1,9 @@
 <template lang="pug">
-.customSelect(
-  :data-value="defaultState"
-)
-  .selector(@click="toggleList")
+.customSelect(:data-value="defaultState")
+  .selector(
+    @click="toggleList"
+    :class="{ 'event-none': selectList.length === 0 }"
+  )
     .label
       span(v-html="defaultState")
 
@@ -122,6 +123,8 @@ export default {
   width: 210px
   @media (max-width: 575px)
     width: 47vmin
+  &.event-none
+    pointer-events: none
   .toggleArrow
     +setPosAbs(50%,-10%,null,null)
     +setSize(0)

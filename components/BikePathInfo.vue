@@ -17,7 +17,7 @@ div
         v-for="(item, idx) in curCycling"
         :key="item.id"
         :data-idx="idx + 1"
-        @click="getCurBikePath(item)"
+        @click="getCurBikeInfo(item)"
       )
         .pathNam(v-if="item.RouteName")
           p 路線名稱 / RouteName
@@ -61,6 +61,8 @@ div
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
   name: 'BikePathInfo',
   props: {
@@ -122,19 +124,29 @@ export default {
     isOpenBikePath: {
       immediate: true,
       handler(val) {
-        if (val) this.$store.dispatch('isClearInfoMarker', true)
+        if (val) this.isClearInfoMarker(true)
       }
     }
   },
   methods: {
+    ...mapActions([
+      'isLoading',
+      'getCyclingShape',
+      'getCurBikePath',
+      'isClearInfoMarker'
+    ]),
     getCurBikeCity(val) {
       this.curBikePathCity = val
     },
     async getAllCyclingShape(city) {
-      await this.$store.dispatch('getCyclingShape', city)
+      this.isLoading(true)
+
+      await this.getCyclingShape(city)
       this.curCycling = await this.$store.state.cyclingShape
+
+      this.isLoading(false)
     },
-    getCurBikePath(item) {
+    getCurBikeInfo(item) {
       this.isOpenBikePathDetail = true
       this.$emit('isOpenBikePath', false)
 
@@ -165,7 +177,7 @@ export default {
         return splitStr.map(item => item.split(' '))
       }
   
-      this.$store.dispatch('getCurBikePath', handlePathMap())
+      this.getCurBikePath(handlePathMap())
     },
   }
 }
