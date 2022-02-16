@@ -273,7 +273,8 @@ export default {
       'getStationNearBy',
       'getAllStation',
       'getAvailability',
-      'getCurTarget'
+      'getCurTarget',
+      'isUpdateUserPosSelect'
     ]),
     getCurCity(val) {
       this.curCity = val
@@ -298,6 +299,7 @@ export default {
       this.isOpenFixedInfo = false
       this.$emit('isOpenLocation', false)
       this.getCurNearItem(item)
+      this.isUpdateUserPosSelect(true)
     },
     getDynamicNearBy(condition) {
       this.getAvailabilityNearBy(condition)
@@ -376,7 +378,7 @@ export default {
 
 <style lang="sass">
 .bikeRentInfos
-  +setPosAbs(0,null,null,155%,-1)
+  +setPosAbs(0,null,null,100%,-1)
   transform: translateY(-300%)
   transition: 0.5s ease-in-out
   &.active
@@ -384,7 +386,7 @@ export default {
 
 .selectionContainer
   +setFlex
-  background: #172532
+  background: rgba(#172532,0.9)
   width: 290px
   max-width: 100%
   flex-direction: column
@@ -399,7 +401,7 @@ export default {
     padding: 14px 20px 20px
     transform: translateY(0)
     @media (max-width: 575px)
-      padding: 3vmin 9vmin 4vmin 9vmin
+      padding: 3vmin 8.5vmin 4vmin 8.5vmin
   &.basicSearch
     .detailInfo
       margin-top: 10px

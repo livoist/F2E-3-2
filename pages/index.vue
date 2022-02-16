@@ -36,7 +36,8 @@ export default {
       getHotel: 'hotelNearBy',
       isClearMarkers: 'isClearMakers',
       isClearBikePath: 'isClearBikePath',
-      getBasicSelect: 'basicSelect'
+      getBasicSelect: 'basicSelect',
+      updateUserPosSelect: 'updateUserPosSelect'
     })
   },
   watch: {
@@ -73,17 +74,14 @@ export default {
         }
       }
     },
-    getCurNearByStation: {
+    updateUserPosSelect: {
       deep: true,
       handler(val) {
-        if (val) this.getUserCurPosNearByStation(val)
-      }
-    },
-    getCurNearItem: {
-      immediate: true,
-      deep: true,
-      handler(val) {
-        if (val) this.getCurNearSelectMarker(val)
+        if (val) {
+          this.getUserCurPosNearByStation(this.getCurNearByStation)
+          this.getCurNearSelectMarker(this.getCurNearItem)
+          this.isUpdateUserPosSelect(false)
+        }
       }
     },
     getRestaruant: {
@@ -133,7 +131,6 @@ export default {
           this.clearOldMarkers(this.nearRestaruantMarkers)
           this.clearOldMarkers(this.nearScenicSpotMarkers)
           this.clearOldMarkers(this.nearHotelMarkers)
-
           this.isClearInfoMarker(false)
         }
       }
@@ -143,7 +140,6 @@ export default {
       handler(val) {
         if (val) {
           this.clearBikePath()
-
           this.isClearInfoBikePath(false)
         }
       }
@@ -154,7 +150,8 @@ export default {
       'changeBasicSelect',
       'isClearInfoMarker',
       'isClearInfoBikePath',
-      'getAllStation'
+      'getAllStation',
+      'isUpdateUserPosSelect'
     ]),
     initMapBox() {
       this.mapInstance = new this.$map.Map({

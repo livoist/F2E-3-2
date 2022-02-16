@@ -32,6 +32,9 @@ const IS_CLEAR_BIKE_PATH = 'IS_CLEAR_BIKE_PATH'
 // is change basic station select
 const IS_CHANGE_BASIC_SELECT = 'IS_CHANGE_BASIC_SELECT'
 
+// is update user pos select
+const IS_UPDATE_USER_POS_SELECT = 'IS_UPDATE_USER_POS_SELECT'
+
 // is loading
 const IS_LOADING = 'IS_LOADING'
 
@@ -60,6 +63,7 @@ const state = () => ({
   isClearMakers: false,
   isClearBikePath: false,
   basicSelect: false,
+  updateUserPosSelect: false,
   loading: false
 })
 
@@ -117,12 +121,18 @@ const mutations = {
   },
   [IS_LOADING](state, bool) {
     state.loading = bool
+  },
+  [IS_UPDATE_USER_POS_SELECT](state, bool) {
+    state.updateUserPosSelect = bool
   }
 }
 
 const actions = {
   isLoading({ commit }, bool) {
     commit(IS_LOADING, bool)
+  },
+  isUpdateUserPosSelect({ commit }, bool) {
+    commit(IS_UPDATE_USER_POS_SELECT, bool)
   },
   changeBasicSelect({ commit }, bool) {
     commit(IS_CHANGE_BASIC_SELECT, bool)
@@ -134,13 +144,13 @@ const actions = {
     commit(IS_CLEAR_OTHER_MARKERS, bool)
   },
   getCurNearItem({ commit }, item) {
-    commit('GET_CUR_NEAR_ITEM', item)
+    commit(GET_CUR_NEAR_ITEM, item)
   },
   getCurBikePath({ commit }, path) {
-    commit('GET_CUR_BIKE_PATH', path)
+    commit(GET_CUR_BIKE_PATH, path)
   },
   getCurTarget({ commit }, curTarget) {
-    commit('GET_CUR_TARGET', curTarget)
+    commit(GET_CUR_TARGET, curTarget)
   },
   async getAllStation({ commit }, city) {
     const url = 'Bike/Station'
@@ -157,21 +167,21 @@ const actions = {
 
     const nameMap = curCityMap.map(item => item.name)
 
-    commit('GET_BIKE_STATION', res)
-    commit('GET_ALL_STATION_NAME', nameMap)
-    commit('GET_CUR_CITY_MAP', curCityMap)
+    commit(GET_BIKE_STATION, res)
+    commit(GET_ALL_STATION_NAME, nameMap)
+    commit(GET_CUR_CITY_MAP, curCityMap)
   },
   async getAvailability({ commit }, city) {
     const url = 'Bike/Availability'
     const res = await this.$axios.$get(`${url}/${city}?$format=JSON`)
 
-    commit('GET_BIKE_AVAILABILITY', res)
+    commit(GET_BIKE_AVAILABILITY, res)
   },
   async getCyclingShape({ commit }, city) {
     const url = 'Cycling/Shape'
     const res = await this.$axios.$get(`${url}/${city}?$format=JSON`)
 
-    commit('GET_BIKE_CYCLING_SHAPE', res)
+    commit(GET_BIKE_CYCLING_SHAPE, res)
   },
   async getStationNearBy({ commit }, condition) {
     const url = 'Bike/Station/NearBy'
@@ -192,8 +202,8 @@ const actions = {
 
     const userPos = [lon, lat]
 
-    commit('GET_USER_POSITION', userPos)
-    commit('GET_BIKE_STATION_NEAR_BY', res)
+    commit(GET_USER_POSITION, userPos)
+    commit(GET_BIKE_STATION_NEAR_BY, res)
   },
   async getAvailabilityNearBy({ commit }, condition) {
     const url = 'Bike/Availability/NearBy'
@@ -211,7 +221,7 @@ const actions = {
       `${url}?$top=10&$spatialFilter=nearby(${lat}, ${lon}, ${distance})&$format=JSON`
     )
 
-    commit('GET_BIKE_AVAILABILITY_NEAR_BY', res)
+    commit(GET_BIKE_AVAILABILITY_NEAR_BY, res)
   },
   async getRestaurantNearByPos({ commit }, condition) {
     const { PositionLat, PositionLon } = condition.pos

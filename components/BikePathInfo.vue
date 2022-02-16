@@ -190,17 +190,16 @@ export default {
     margin-top: 2vmin
 
 .bikePathInfos
-  +setPosAbs(0,null,null,148%)
-  background: #172532
+  +setPosAbs(0,null,null,100%)
+  background: rgba(#172532,0.9)
   min-width: 400px
   padding: 20px
-  border-radius: 0 0 8px 8px
   transform: translateY(-300%)
   transition: 0.5s
   @media (max-width: 575px)
     min-width: auto
     width: 70vw
-    padding: 2vmin 3vmin 4vmin 4vmin
+    padding: 2vmin 3vmin 2.5vmin 4vmin
   &.active
     transform: translateY(0)
 
@@ -264,7 +263,6 @@ export default {
   padding: 15px 40px
   position: fixed
   color: rgba(#fff,0.6)
-  border-radius: 0 0 4px 4px
   left: 51%
   top: 0
   transform: translateX(-50%)
@@ -274,8 +272,8 @@ export default {
   transition: 0.3s
   @media (max-width: 575px)
     flex-direction: column
-    padding: 3vmin 3.5vmin
-    left: 60%
+    padding: 3vmin 2vmin
+    left: 61.4%
     min-width: 73%
   &.active
     opacity: 1
@@ -287,7 +285,7 @@ export default {
     font-weight: bold
     position: relative
     @media (max-width: 575px)
-      font-size: 3.5vmin
+      font-size: 3.25vmin
       white-space: initial
       margin: 1vmin 2vmin
     br
