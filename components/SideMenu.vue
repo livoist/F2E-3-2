@@ -1,7 +1,5 @@
 <template lang="pug">
 .sideMenu
-  LoadingPage(:isLoading="isLoading")
-
   .searchBtns
     .locationIcon(
       @click.self="changeInfo('location')"
@@ -22,7 +20,6 @@
     :isClearInfo="isOpenBikePath"
     :isOpenRentDetailInfo="isOpenRentDetailInfo"
     @isOpenLocation="getLocationState"
-    @isLoading="getIsLoading"
   )
 
   BikePathInfo(
@@ -34,20 +31,12 @@
 </template>
 
 <script>
-import BikePathInfo from './BikePathInfo.vue'
-import BikeRentInfo from './BikeRentInfo.vue'
-
 export default {
   name: 'SideMenu',
-  components: {
-    BikePathInfo,
-    BikeRentInfo
-  },
   data() {
     return {
       isOpenLocation: false,
       isOpenBikePath: false,
-      isLoading: false,
       isOpenRentDetailInfo: false,
       curMenu: ''
     }
@@ -84,11 +73,9 @@ export default {
       if (type === 'bikePath') {
         this.isOpenBikePath = !this.isOpenBikePath
         if (this.isOpenLocation) this.isOpenLocation = false
+        this.$store.dispatch('isOpenModal', false)
         this.curMenu = type
       }
-    },
-    getIsLoading(val) {
-      this.isLoading = val
     },
     getBikePathState(val) {
       this.isOpenBikePath = val
@@ -105,7 +92,7 @@ export default {
   position: fixed
   left: 0
   top: 0
-  z-index: 100
+  z-index: 9
   @media (max-width: 768px)
     height: auto
 

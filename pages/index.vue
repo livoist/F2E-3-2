@@ -1,5 +1,11 @@
 <template lang="pug">
 #map
+  LoadingPage
+  EnterAnimation
+  MarkerDetailModal(
+    :modalType="curModalType"
+    :info="curMarkerDetailInfo"
+  )
 
 </template>
 
@@ -20,6 +26,8 @@ export default {
       nearRestaruantMarkers: [],
       nearScenicSpotMarkers: [],
       nearHotelMarkers: [],
+      curMarkerDetailInfo: {},
+      curModalType: ''
     }
   },
   computed: {
@@ -151,10 +159,11 @@ export default {
       'isClearInfoMarker',
       'isClearInfoBikePath',
       'getAllStation',
-      'isUpdateUserPosSelect'
+      'isUpdateUserPosSelect',
+      'isLoadingSource'
     ]),
-    initMapBox() {
-      this.mapInstance = new this.$map.Map({
+    async initMapBox() {
+      this.mapInstance = await new this.$map.Map({
         accessToken: 'pk.eyJ1IjoiYmVubGFpIiwiYSI6ImNrdzRib2FzYTAydTQyb3JoaHU4MGVzcWoifQ.j-bTKoCaWwbV4Ldqvy2Vrg',
         container: 'map',
         style: 'mapbox://styles/mapbox/light-v10',
@@ -162,8 +171,10 @@ export default {
         zoom: 7
       })
 
-      this.mapMarker = new this.$map.Marker()
-      this.mapPopup = new this.$map.Popup()
+      this.mapMarker = await new this.$map.Marker()
+      this.mapPopup = await new this.$map.Popup()
+
+      setTimeout(() => { this.isLoadingSource(true) }, 2000)
     },
     getCurNearSelectMarker(target) {
       const { pos, name } = target
@@ -237,19 +248,20 @@ export default {
         this.mapInstance.getSource(item) && this.mapInstance.removeSource(item)
       })
     },
-    createCustomPoint(type, item) {
+    createCustomPoint(type, item, num = '') {
       const el = document.createElement('div')
       const childText = document.createElement('div')
   
       if (item === 'SELF') {
         childText.innerHTML = item
         el.classList.add('marker', type)
+        childText.classList.add('textBlock', type)
       } else {
         childText.innerHTML = item.name.length > 8 ? `${item.name.slice(0, 7)}...` : item.name
         el.classList.add('marker', type, 'hidden')
+        childText.classList.add('textBlock', type, `${type}-${num}`)
       }
 
-      childText.classList.add('textBlock', type)
       el.appendChild(childText)
 
       return el
@@ -261,12 +273,15 @@ export default {
       }
 
       const result = markersInfo.slice()
-      result.forEach(item => {
-        const el = this.createCustomPoint(type, item)
+      result.forEach((item, idx) => {
+        const el = this.createCustomPoint(type, item, idx)
         const markers = new this.$map.Marker(el)
+        const markerInfo = { type: type, idx: idx, info: item  }
 
         markers.setLngLat(item.pos).addTo(this.mapInstance)
         this.nearRestaruantMarkers.push(markers)
+
+        this.addEventListenerToMarker(markerInfo)
       })
     },
     getUserCurPosNearByStation(nearByAry) {
@@ -465,10 +480,30 @@ export default {
     async getBikeStation(city) {
       await this.getAllStation(city)
       this.station = this.$store.state.station
-    }
+    },
+    getCurMarkerDetailInfo(type, info) {
+      this.curMarkerDetailInfo = info
+      this.curModalType = type
+      this.$store.dispatch('isOpenModal', true)
+    },
+    addEventListenerToMarker(targetMarker) {
+      const { type, idx, info } = targetMarker
+      const targetEl = document.querySelector(`.${type}-${idx}`)
+
+      targetEl.addEventListener('click', () => this.getCurMarkerDetailInfo(type, info))
+    },
+    removeEventListenerToMarker() {
+      const getAllMarker = document.querySelectorAll('.marker')
+      getAllMarker.forEach(
+        item => item.removeEventListener('click', this.getCurMarkerDetailInfo(this.curMarkerDetailInfo))
+      )
+    },
   },
   mounted() {
     this.initMapBox()
+  },
+  beforeDestroyed() {
+    this.removeEventListenerToMarker()
   }
 }
 </script>
@@ -494,9 +529,10 @@ export default {
 .marker
   +setSize(12px)
   border-radius: 50%
-  position: relative
+  position: absolute
   border: 3px solid #a3a3a3
   transition: 0.3s
+  z-index: 1
   &.hidden
     opacity: 0
     visibility: hidden

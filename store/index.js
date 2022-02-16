@@ -38,6 +38,12 @@ const IS_UPDATE_USER_POS_SELECT = 'IS_UPDATE_USER_POS_SELECT'
 // is loading
 const IS_LOADING = 'IS_LOADING'
 
+// is loadingSource
+const IS_LOADING_SOURCE = 'IS_LOADING_SOURCE'
+
+// is open modal
+const IS_OPEN_MODAL = 'IS_OPEN_MODAL'
+
 const getStationNearByUrl = (type, city, lat, lon) => {
   const endpoint = `Tourism/${type}/${city}`
   const url = `${endpoint}?$top=10&$spatialFilter=nearby(${lat},${lon}, 3000)&$format=JSON`
@@ -64,7 +70,9 @@ const state = () => ({
   isClearBikePath: false,
   basicSelect: false,
   updateUserPosSelect: false,
-  loading: false
+  loading: false,
+  loadingSource: false,
+  openModal: false
 })
 
 const mutations = {
@@ -124,12 +132,24 @@ const mutations = {
   },
   [IS_UPDATE_USER_POS_SELECT](state, bool) {
     state.updateUserPosSelect = bool
+  },
+  [IS_LOADING_SOURCE](state, bool) {
+    state.loadingSource = bool
+  },
+  [IS_OPEN_MODAL](state, bool) {
+    state.openModal = bool
   }
 }
 
 const actions = {
   isLoading({ commit }, bool) {
     commit(IS_LOADING, bool)
+  },
+  isOpenModal({ commit }, bool) {
+    commit(IS_OPEN_MODAL, bool)
+  },
+  isLoadingSource({ commit }, bool) {
+    commit(IS_LOADING_SOURCE, bool)
   },
   isUpdateUserPosSelect({ commit }, bool) {
     commit(IS_UPDATE_USER_POS_SELECT, bool)

@@ -202,6 +202,7 @@ export default {
         if (val) {
           this.isOpenFixedInfo = false
           this.getResultNearByPos(val)
+          this.isOpenModal(false)
         }
       }
     },
@@ -211,6 +212,7 @@ export default {
         if (val) {
           this.canRent = 0
           this.notReturn = 0
+          this.isOpenModal(false)
           this.getAllStationInfo()
         }
       }
@@ -222,6 +224,7 @@ export default {
           this.canRent = 0
           this.notReturn = 0
           this.checkboxs.forEach(item => item.modelTarget = false)
+          this.isOpenModal(false)
 
           this.getCurCityMap()
           this.getRestaurantNearByPosInfo(this.curCity, this.curTarget.pos)
@@ -274,7 +277,8 @@ export default {
       'getAllStation',
       'getAvailability',
       'getCurTarget',
-      'isUpdateUserPosSelect'
+      'isUpdateUserPosSelect',
+      'isOpenModal'
     ]),
     getCurCity(val) {
       this.curCity = val
