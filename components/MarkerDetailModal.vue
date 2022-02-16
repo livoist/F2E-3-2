@@ -31,11 +31,7 @@ export default ({
       this.$store.dispatch('isOpenModal', false)
     },
     checkContent(content) {
-      if (content === undefined || content === null || content === '') {
-        return '尚未提供'
-      } else {
-        return content
-      }
+      return content === undefined || content === null || content === '' ? '尚未提供' : content
     }
   }
 })

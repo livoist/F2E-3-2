@@ -29,7 +29,7 @@ export default {
   font-weight: bold
   letter-spacing: 8px
   color: #7e7e7e
-  z-index: 8
+  z-index: 9
   @media (max-width: 575px)
     font-size: 5.5vmin
   &.loading
