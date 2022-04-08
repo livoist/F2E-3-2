@@ -46,15 +46,15 @@ export default {
 
   pwa: {
     icon: {
-      source: '/F2E-3-2/static'
+      source: '/F2E-3-2/static/icon.png'
     },
     manifest: {
       title: 'BikeMap',
-      shortName: 'BikeMap',
+      short_name: 'BikeMap',
       name: 'BikeMap',
       lang: 'zh',
-      themeColor: '#ffffff',
-      backgroundColor: '#ffffff',
+      theme_color: '#ffffff',
+      background_color: '#ffffff',
       useWebmanifestExtension: false
     }
   },
