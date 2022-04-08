@@ -41,12 +41,22 @@ export default {
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: [
+    '@nuxtjs/pwa'
   ],
+
+  pwa: {
+    manifest: {
+      title: 'BikeMap',
+      short_name: 'BikeMap',
+      name: 'BikeMap',
+      lang: 'ch',
+      useWebmanifestExtension: false
+    }
+  },
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     '@nuxtjs/axios',
-    'nuxt-leaflet',
     '@nuxtjs/style-resources'
   ],
 
