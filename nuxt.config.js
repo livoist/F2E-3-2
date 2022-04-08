@@ -45,9 +45,6 @@ export default {
   ],
 
   pwa: {
-    icon: {
-      source: '/F2E-3-2/static/icon.png'
-    },
     manifest: {
       title: 'BikeMap',
       short_name: 'BikeMap',
