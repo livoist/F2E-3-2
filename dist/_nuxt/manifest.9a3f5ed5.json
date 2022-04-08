@@ -1,6 +1,6 @@
 {
   "name": "BikeMap",
-  "short_name": "BikeMap",
+  "short_name": "F2E-3-2",
   "description": "`Nuxt.js`: Vue.js SSR Framework",
   "icons": [
     {
@@ -49,6 +49,9 @@
   "start_url": "/F2E-3-2/?standalone=true",
   "display": "standalone",
   "background_color": "#ffffff",
-  "lang": "ch",
-  "title": "BikeMap"
+  "lang": "zh",
+  "title": "BikeMap",
+  "shortName": "BikeMap",
+  "themeColor": "#ffffff",
+  "backgroundColor": "#ffffff"
 }
