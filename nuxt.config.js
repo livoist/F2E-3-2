@@ -45,6 +45,7 @@ export default {
   ],
 
   pwa: {
+    icon: false,
     manifest: {
       title: 'BikeMap',
       short_name: 'BikeMap',
