@@ -4,10 +4,10 @@ div
     :class="{ 'active': isOpenFixedInfo && !isOpenLocation }"
   )
     div
-      | 可租借 / CanRent:
+      | 可租借 / balance:
       span {{ canRent }}
     div
-      | 未歸還 / NotReturn:
+      | 未歸還 / not return:
       span {{ notReturn }}
 
     div.checkboxBlock
@@ -45,13 +45,13 @@ div
           p
             | 可租借
             br
-            | CanRent
+            | balance
           p {{ canRent }}
         div
           p
             | 未歸還
             br
-            | NotReturn
+            | not eturn
           p {{ notReturn }}
 
     .selectionContainer.advance(:class="{ 'active': isOpenLocation }")
@@ -60,14 +60,13 @@ div
         p AdvanceSearch
         .slash
       .selectBox
-        p 搜尋範圍 / distance
+        p 搜尋範圍 / Distance
         CustomSelect.advance(
           :selectList="ranges"
           @defVal="getCurMeters"
         )
-      .result
-        p.mb-1 {{ getCurNearByStation.length }} 租借站
-        p {{ getCurNearByStation.length }} Near Station
+      .result(v-if="getCurNearByStation.length !== 0")
+        p 租借站 / Near Station {{ getCurNearByStation.length }}
       .detailInfo(v-if="getCurNearByStation.length !== 0")
         div(
           v-for="(item, index) in getCurNearByStation"
@@ -98,10 +97,10 @@ div
 
           template(v-if="getDynamicNearByArray.length !== 0")
             p
-              | 可租借 / CanRent : 
+              | 可租借 / balance : 
               span {{ getDynamicNearByInfo(item.id, 'AvailableRentBikes') }}
             p
-              | 未歸還 / NotReturn : 
+              | 未歸還 / not return : 
               span {{ getDynamicNearByInfo(item.id, 'AvailableReturnBikes') }}
             p
               | 資料更新時間 / UpdateTimes :
@@ -110,9 +109,9 @@ div
               span {{ getDynamicNearByInfo(item.id, 'UpdateTime') }}
       .notSelect(v-else-if="curMeters === 0") 尚未選擇距離
       .notFound(v-else)
-        | 此距離範圍沒有租借站
+        | 此範圍內沒有租借站
         br
-        | ( Not found match condition result )
+        | (Station Not Found)
 
 </template>
 
@@ -165,17 +164,17 @@ export default {
       isOpenFixedInfo: false,
       checkboxs: [
         {
-          name: '餐廳 / Restaurant',
+          name: '餐廳 / restaurant',
           type: 'restaurant',
           modelTarget: false
         },
         {
-          name: '景點 / ScenicSpot',
+          name: '景點 / view',
           type: 'scenicSpot',
           modelTarget: false
         },
         {
-          name: '住宿 / Hotel',
+          name: '住宿 / hotel',
           type: 'hotel',
           modelTarget: false
         }
@@ -429,12 +428,13 @@ export default {
     .result
       font-size: 14px
       color: #fff
-      margin-bottom: 20px
       text-align: center
+      margin: 10px auto
     .notFound,.notSelect
       color: #a3a3a3
       text-align: center
       line-height: 1.5
+      font-size: 12px
     .detailInfo
       flex-direction: column
       overflow-y: scroll
@@ -498,6 +498,8 @@ export default {
       text-align: center
       color: #a3a3a3
       margin: 0 20px
+      @media (max-width: 575px)
+        margin: 0 3vmin
       p
         &:nth-of-type(1)
           font-weight: bold
@@ -523,10 +525,11 @@ export default {
   transition: 0.3s
   white-space: nowrap
   @media (max-width: 575px)
-    padding: 3vmin 1vmin 2vmin
+    padding: 3vmin 4vmin
     flex-direction: column
-    width: 46%
-    left: 76%
+    align-items: flex-start
+    right: 0
+    transform: translateX(0)
   &.active
     opacity: 1
     visibility: visible
@@ -535,15 +538,18 @@ export default {
     color: rgba(#fff,0.6)
     font-size: 14px
     @media (max-width: 575px)
-      margin: 0 2.5vmin 0.75vmin
       display: inline-block
       font-size: 3.3vmin
+      margin: 0
+      &:nth-child(1)
+        margin-bottom: 1vmin
     &.checkboxBlock
       display: flex
-      @media (max-width: 575px)
-        margin-top: 2vmin
+      @media (max-width: 1024px)
         flex-direction: column
         align-items: flex-start
+      @media (max-width: 575px)
+        margin-top: 2vmin
       > div
           +setFlex
           position: relative

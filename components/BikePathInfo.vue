@@ -270,7 +270,8 @@ export default {
 
 .userSelectPathInfo
   background: rgba(#08111A,0.75)
-  padding: 15px 40px
+  padding: 10px 4px 10px
+  border-radius: 0 0 4px 4px
   position: fixed
   color: rgba(#fff,0.6)
   left: 51%
