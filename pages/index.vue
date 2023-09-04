@@ -168,7 +168,7 @@ export default {
         container: 'map',
         style: 'mapbox://styles/mapbox/light-v10',
         center: [120.9738819, 23.97565],
-        zoom: 7
+        zoom: 6.5
       })
 
       this.mapMarker = await new this.$map.Marker()
@@ -198,21 +198,21 @@ export default {
           this.mapPopup
             .setHTML(`
               <p class="popup-content">
-                <span>Address :</span> 
+                <span>address :</span> 
                 <span>${target.address.Zh_tw}</span>
               </p>
               <div class="popup-flex">
                 <p class="popup-content">
-                  <span>CanRent : </span>
+                  <span>balance : </span>
                   <span>${AvailableRentBikes}</span>
                 </p>
                 <p class="popup-content">
-                  <span>NotReturn : </span>
+                  <span>not return : </span>
                   <span>${AvailableReturnBikes}</span>
                 </p>
               </div>
               <p class="popup-content">
-                <span>LastUpdateTimes : </span>
+                <span>update times : </span>
                 <br />
                 <span>${UpdateTime}</span>
                 </p>

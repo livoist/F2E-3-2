@@ -75,22 +75,22 @@ div
           @click="getCurNearNameItemInfo(item)"
         )
           p
-            | 中文站名 / Name-zh :
+            | 中文站名 / name-zh :
             br
             |
             span {{ item.name.Zh_tw }}
           p
-            | 英文站名 / Name-en :
+            | 英文站名 / name-en :
             br
             |
             span {{ item.name.En }}
           p
-            | 中文地址 / Address-zh :
+            | 中文地址 / address-zh :
             br
             |
             span {{ item.address.Zh_tw }}
           p
-            | 英文地址 / Address-en :
+            | 英文地址 / address-en :
             br
             |
             span {{ item.address.En }}
@@ -103,7 +103,7 @@ div
               | 未歸還 / not return : 
               span {{ getDynamicNearByInfo(item.id, 'AvailableReturnBikes') }}
             p
-              | 資料更新時間 / UpdateTimes :
+              | 資料更新時間 / update times :
               br
               |
               span {{ getDynamicNearByInfo(item.id, 'UpdateTime') }}
@@ -383,7 +383,7 @@ export default {
 
 <style lang="sass">
 .slash
-  width: 80%
+  width: 85%
   height: 1px
   background: #a3a3a3
   margin: 14.5px auto
@@ -410,14 +410,14 @@ export default {
   transform: translateY(-300%)
   transition: 0.5s ease-in-out
   @media (max-width: 575px)
-    width: auto
+    width: 64vw
   &.active
     transform: translateY(0)
   &.advance,&.basicSearch
     padding: 14px 20px 20px
     transform: translateY(0)
     @media (max-width: 575px)
-      padding: 3vmin 8.5vmin 4vmin 8.5vmin
+      padding: 3vmin 6.5vmin 4vmin 6.5vmin
   &.basicSearch
     .detailInfo
       margin-top: 10px
@@ -429,7 +429,9 @@ export default {
       font-size: 14px
       color: #fff
       text-align: center
-      margin: 10px auto
+      margin: 0px auto 10px
+      @media (max-width: 575px)
+        margin: 0px auto 2vmin
     .notFound,.notSelect
       color: #a3a3a3
       text-align: center
@@ -454,7 +456,7 @@ export default {
         &:after
           content: attr(data-idx)
           +setSize(16px)
-          +setPosAbs(-1px,null,null,-16px)
+          +setPosAbs(-1px,null,null,-12px)
           text-align: center
           line-height: 16px
           background: #fff
@@ -501,9 +503,9 @@ export default {
       @media (max-width: 575px)
         margin: 0 3vmin
       p
+        line-height: 1.5
         &:nth-of-type(1)
           font-weight: bold
-          line-height: 1.5
         &:nth-of-type(2)
           margin-top: 6px
           font-weight: bold
