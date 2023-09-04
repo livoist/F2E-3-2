@@ -51,39 +51,20 @@ export default ({
   &.enter
     opacity: 0
     visibility: hidden
-  &:before
-    content: ''
-    position: absolute
-    +setSize(92%,85%)
-    border: 1px solid #000
-    @media (max-width: 575px)
-      +setSize(85%, 93%)
   p
     line-height: 2
     font-family: "LiHei Pro", "黑體-繁", "微軟正黑體", sans-serif
     font-weight: bold
+    letter-spacing: 2px
     &:nth-of-type(1)
-      font-size: 40px
+      font-size: 24px
       position: relative
       @media (max-width: 575px)
-        font-size: 6vmin
-      &:before,&:after
-        content: ''
-        position: absolute
-        background: #000
-        +setSize(40px,6px)
-        top: 50%
-        transform: translateY(-50%)
-        @media (max-width: 575px)
-          +setSize(8vmin,1.25vmin)
-      &:before
-        left: -25%
-      &:after
-        right: -25%
+        font-size: 4vmin
     &:nth-of-type(2)
-      font-size: 20px
-      letter-spacing: 4px
+      font-size: 16px
+      letter-spacing: 2px
       animation: fadeText 1s both infinite alternate linear
       @media (max-width: 575px)
-        font-size: 4vmin
+        font-size: 3vmin
 </style>

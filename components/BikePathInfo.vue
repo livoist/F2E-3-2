@@ -2,17 +2,20 @@
 div
   .bikePathInfos(:class="{ 'active': isOpenBikePath }")
     .selectBox
-      p 單車路線搜尋
-      p.slash BikePathSearch
-    .selectBox.mb-30
+      p.mb-1 單車路線搜尋
+      p BikePathSearch
+      .slash
+    .selectBox
       p 城市 / City
       CustomSelect.bikePath(
         :selectList="bikeCitys"
         @defVal="getCurBikeCity"
       )
-      .routeDetail
-        p 路線總數量 / TotalRoute : {{ curCycling.length }}
-    .bakcInfoInner
+
+    .routeDetail.mb-30(v-if="curCycling.length !== 0")
+      p 路線總數量 / Result : {{ curCycling.length }}
+
+    .bakcInfoInner(v-if="curCycling.length !== 0")
       .bikePathInfo(
         v-for="(item, idx) in curCycling"
         :key="item.id"
@@ -20,42 +23,42 @@ div
         @click="getCurBikeInfo(item)"
       )
         .pathNam(v-if="item.RouteName")
-          p 路線名稱 / RouteName
-          p {{ item.RouteName }}
+          p.fz-14 路線名稱 / name
+          p.fz-16.white {{ item.RouteName }}
         .pathStart(v-if="item.RoadSectionStart")
-          p 路線起點 / RoadSectionStart
+          p 路線起點 / start point
           p {{ item.RoadSectionStart }}
         .pathEnd(v-if="item.RoadSectionEnd")
-          p 路線終點 / RoadSectionEnd
+          p 路線終點 / end point
           P {{ item.RoadSectionEnd }}
         .pathDirection(v-if="item.Direction")
-          p 路線方向 / Direction
+          p 路線方向 / direction
           p {{ item.Direction }}
         .pathLength(v-if="item.CyclingLength")
-          p 路線總長 / CyclingLength
+          p 路線總長 / km
           p {{ item.CyclingLength / 1000 }}km
 
   .userSelectPathInfo(
     :class="{ 'active': (isOpenBikePathDetail && !isOpenBikePath) }"
   )
     div(v-if="curSelectBikePathInfo.city")
-      | 城市 / City : 
+      | 城市 / city : 
       span {{ curSelectBikePathInfo.city }}
 
     div(v-if="curSelectBikePathInfo.name")
-      | 路線 / PathName : 
+      | 路線 / name : 
       span {{ curSelectBikePathInfo.name }}
 
     div(v-if="curSelectBikePathInfo.length")
-      | 總長 / Length : 
+      | 總長 / km : 
       span {{ curSelectBikePathInfo.length / 1000 }}km
 
     div.start(v-if="curSelectBikePathInfo.roadStart")
-      | 起點 / StartPoint : 
+      | 起點 / start point : 
       span {{ curSelectBikePathInfo.roadStart }}
 
     div.end(v-if="curSelectBikePathInfo.roadEnd")
-      | 終點 / EndPoint : 
+      | 終點 / end point : 
       span {{ curSelectBikePathInfo.roadEnd }}
 
 </template>
@@ -184,22 +187,27 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-.selectBox.mb-30 > p
+.selectBox > p
   margin-top: 8px
   @media (max-width: 575px)
     margin-top: 2vmin
+
+.mb-1
+  margin-bottom: 4px
+.mb-30
+  margin-bottom: 30px
 
 .bikePathInfos
   +setPosAbs(0,null,null,100%)
   background: rgba(#172532,0.9)
   min-width: 400px
-  padding: 20px
+  padding: 15px
   transform: translateY(-300%)
   transition: 0.5s
   @media (max-width: 575px)
     min-width: auto
     width: 70vw
-    padding: 2vmin 3vmin 2.5vmin 4vmin
+    padding: 3.5vmin
   &.active
     transform: translateY(0)
 
@@ -212,6 +220,7 @@ export default {
     max-height: 75vh
 
 .routeDetail p
+  text-align: center
   color: #a3a3a3
   font-size: 14px
   @media (max-width: 575px)
@@ -248,13 +257,14 @@ export default {
     margin-bottom: 12px
   p
     &:nth-of-type(1)
-      font-size: 18px
       font-weight: bold
-      margin-bottom: 4px
+      margin-bottom: 6px
+      font-size: 12px
       @media (max-width: 575px)
         font-size: 3.5vmin
     &:nth-of-type(2)
       font-size: 14px
+      color: #fff
       @media (max-width: 575px)
         font-size: 3vmin
 

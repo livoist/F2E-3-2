@@ -24,8 +24,9 @@ div
   .bikeRentInfos(:class="{ 'active': isOpenLocation }")
     .selectionContainer.basicSearch
       .selectBox
-        p 基本搜尋
-        p.slash BasicSearch
+        p.mb-1 基本搜尋
+        p BasicSearch
+        .slash
       .selectBox
         p 城市 / City
         CustomSelect.citys(
@@ -55,8 +56,9 @@ div
 
     .selectionContainer.advance(:class="{ 'active': isOpenLocation }")
       .selectBox
-        p 進階搜尋
-        p.slash AdvanceSearch
+        p.mb-1 進階搜尋
+        p AdvanceSearch
+        .slash
       .selectBox
         p 搜尋範圍 / distance
         CustomSelect.advance(
@@ -64,7 +66,7 @@ div
           @defVal="getCurMeters"
         )
       .result
-        p {{ getCurNearByStation.length }} 租借站
+        p.mb-1 {{ getCurNearByStation.length }} 租借站
         p {{ getCurNearByStation.length }} Near Station
       .detailInfo(v-if="getCurNearByStation.length !== 0")
         div(
@@ -381,6 +383,17 @@ export default {
 </script>
 
 <style lang="sass">
+.slash
+  width: 80%
+  height: 1px
+  background: #a3a3a3
+  margin: 14.5px auto
+  @media (max-width: 575px)
+    margin: 2.5vmin auto
+
+.mb-1
+  margin-bottom: 4px
+
 .bikeRentInfos
   +setPosAbs(0,null,null,100%,-1)
   transform: translateY(-300%)
@@ -459,9 +472,7 @@ export default {
 .selectBox
   +setFlex
   flex-direction: column
-  margin: 10px 0
-  @media (max-width: 575px)
-    margin: 2vmin 0
+  width: 100%
   &.mb-30
     margin-bottom: 30px
     @media (max-width: 575px)
@@ -469,24 +480,18 @@ export default {
   > p
       color: #a3a3a3
       font-weight: bold
-      font-size: 14px
-      letter-spacing: 4px
+      font-size: 12px
+      letter-spacing: 2px
       position: relative
       @media (max-width: 575px)
         font-size: 3vmin
       &.fz-14
         font-size: 14px
-      &.slash
-        &:after
-          content: ''
-          +setPosAbs(null,null,-50%,50%)
-          +setSize(220px,1px)
-          transform: translateX(-50%)
-          background: #fff
 
 .detailInfo
   display: flex
   margin-top: 30px
+  font-size: 14px
   > div
       +setFlex
       flex-direction: column
@@ -499,7 +504,6 @@ export default {
           line-height: 1.5
         &:nth-of-type(2)
           margin-top: 6px
-          font-size: 18px
           font-weight: bold
           color: rgba(#fff,0.85)
 
@@ -510,6 +514,7 @@ export default {
   left: 50%
   transform: translateX(-50%)
   display: flex
+  align-items: center
   background: rgba(#08111A,0.75)
   padding: 6px 4px 8px
   border-radius: 0 0 4px 4px

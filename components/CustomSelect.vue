@@ -138,11 +138,11 @@ export default {
   .label
     display: block
     padding: 9px
-    font-size: 16px
+    font-size: 14px
     color: rgba(#fff,0.85)
     font-weight: bold
     @media (max-width: 575px)
-      font-size: 3.5vmin
+      font-size: 3.25vmin
   ul
     width: 100%
     overflow-y: scroll

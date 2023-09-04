@@ -173,7 +173,7 @@ const actions = {
     commit(GET_CUR_TARGET, curTarget)
   },
   async getAllStation({ commit }, city) {
-    const url = 'Bike/Station'
+    const url = 'Bike/Station/City'
     const res = await this.$axios.$get(`${url}/${city}?&$format=JSON`)
 
     const curCityMap = res.map(item => {
@@ -192,13 +192,13 @@ const actions = {
     commit(GET_CUR_CITY_MAP, curCityMap)
   },
   async getAvailability({ commit }, city) {
-    const url = 'Bike/Availability'
+    const url = 'Bike/Availability/City'
     const res = await this.$axios.$get(`${url}/${city}?$format=JSON`)
 
     commit(GET_BIKE_AVAILABILITY, res)
   },
   async getCyclingShape({ commit }, city) {
-    const url = 'Cycling/Shape'
+    const url = 'Cycling/Shape/City'
     const res = await this.$axios.$get(`${url}/${city}?$format=JSON`)
 
     commit(GET_BIKE_CYCLING_SHAPE, res)

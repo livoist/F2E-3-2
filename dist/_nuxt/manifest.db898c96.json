@@ -1,7 +1,6 @@
 {
   "name": "BikeMap",
   "short_name": "BikeMap",
-  "description": "`Nuxt.js`: Vue.js SSR Framework",
   "icons": [
     {
       "src": "/F2E-3-2/_nuxt/icons/icon_64x64.471c21.png",

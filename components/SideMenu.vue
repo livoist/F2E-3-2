@@ -6,14 +6,14 @@
       :class="{ 'active': curMenu === 'location' && isOpenLocation }"
     )
       .icon
-      p Rent Bike
+      p Search Bike
 
     .bikePathIcon(
       @click.self="changeInfo('bikePath')"
       :class="{ 'active': curMenu === 'bikePath' && isOpenBikePath }"
     )
       .icon
-      p Bike Path
+      p Search Path
 
   BikeRentInfo(
     :isOpenLocation="isOpenLocation"
@@ -105,7 +105,8 @@ export default {
   cursor: pointer
   background: rgba(#000,0.8)
   transition: 0.3s
-  padding: 16px
+  padding: 16px 0
+  width: 102px
   +setFlex
   flex-direction: column
   @media (max-width: 575px)
@@ -113,6 +114,8 @@ export default {
     width: 15vmin
   &:hover,&.active
     background: rgba(#172532,0.9)
+    p
+      opacity: 0.7
   .icon
     +setSize(34px,28px)
     background-size: 100% 100%
@@ -124,16 +127,19 @@ export default {
       margin-bottom: 1.5vmin
   p
     font-size: 12px
-    color: #f2eadf
+    color: #f6f6f4
     font-weight: bold
     pointer-events: none
     transition: 0.3s
+    opacity: 0.5
 
 .locationIcon
+  white-space: nowrap
   .icon
     background-image: url('@img/location.png')
 
 .bikePathIcon
+  white-space: nowrap
   .icon
     background-image: url('@img/bike.png')
 
