@@ -312,13 +312,12 @@ export default {
       &:before
         content: ''
         +setSize(10px)
-        +setPosAbs(3px,null,null,-20px)
+        +setPosAbs(0,null,null,-20px)
         border: 2px solid #3A5A69
         border-radius: 50%
         @media (max-width: 575px)
           +setSize(2vmin)
-          top: 1vmin
-          left: -4vmin
+          left: -4.5vmin
     &.start:before
       background: #FEC804
     &.end:before

@@ -40,7 +40,7 @@ div
           :reloading="isReloading"
           @defVal="getCurSelect"
         )
-      .detailInfo
+      .detailInfo.basic
         div
           p
             | 可租借
@@ -169,7 +169,7 @@ export default {
           modelTarget: false
         },
         {
-          name: '景點 / view',
+          name: '景點 / attractions',
           type: 'scenicSpot',
           modelTarget: false
         },
@@ -393,6 +393,9 @@ export default {
 .mb-1
   margin-bottom: 4px
 
+.line-h-1-3
+  line-height: 1.3
+
 .bikeRentInfos
   +setPosAbs(0,null,null,100%,-1)
   transform: translateY(-300%)
@@ -421,6 +424,8 @@ export default {
   &.basicSearch
     .detailInfo
       margin-top: 10px
+      @media (max-width: 575px)
+        margin-top: 2vmin
   &.advance
     margin-bottom: 20px
     position: relative
@@ -510,6 +515,13 @@ export default {
           margin-top: 6px
           font-weight: bold
           color: rgba(#fff,0.85)
+          @media (max-width: 575px)
+            margin-top: 1vmin
+  &.basic p
+    &:nth-child(1)
+      line-height: 1.3
+    &:nth-child(2)
+      line-height: 1
 
 
 .fixedBikeRentInfo
