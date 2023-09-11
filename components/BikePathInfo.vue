@@ -312,9 +312,10 @@ export default {
       &:before
         content: ''
         +setSize(10px)
-        +setPosAbs(0,null,null,-20px)
+        +setPosAbs(50%,null,null,-20px)
         border: 2px solid #3A5A69
         border-radius: 50%
+        transform: translateY(-50%)
         @media (max-width: 575px)
           +setSize(2vmin)
           left: -4.5vmin
