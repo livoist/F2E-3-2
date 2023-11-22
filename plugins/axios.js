@@ -16,7 +16,7 @@ const getAuthorizationHeader = () => {
 }
 
 export default function({ $axios }) {
-  $axios.defaults.baseURL = `https://ptx.transportdata.tw/MOTC/v2/`
+  $axios.defaults.baseURL = `https://tdx.transportdata.tw/api/basic/v2/`
   $axios.defaults.headers = getAuthorizationHeader()
   // $axios.onRequest((config) => {
   //   console.log('Making request to ' + config.url)
