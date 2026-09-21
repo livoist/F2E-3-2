@@ -6,8 +6,6 @@ const EXPIRY_MARGIN_MS = 60 * 1000
 
 export default function({ $axios, $config }) {
   const { tdxClientId, tdxClientSecret } = $config
-  console.log('TDX Client ID:', tdxClientId)
-  console.log('TDX Client Secret:', tdxClientSecret)
 
   let token = ''
   let expiresAt = 0
