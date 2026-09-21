@@ -42,6 +42,12 @@ export default {
       userSelect: ''
     }
   },
+  mounted() {
+    document.addEventListener('click', this.closeOnOutsideClick)
+  },
+  beforeDestroy() {
+    document.removeEventListener('click', this.closeOnOutsideClick)
+  },
   computed: {
     defaultState() {
       return this.reloading ? this.defaultValue = '請選擇' : this.defaultValue
@@ -98,6 +104,16 @@ export default {
     },
     toggleList() {
       this.visible = !this.visible
+    },
+    // back to the initial "請選擇" state
+    reset() {
+      this.defaultValue = '請選擇'
+      this.userSelect = ''
+      this.visible = false
+    },
+    // a click anywhere else (empty panel area, outside the panel, another select) folds the list
+    closeOnOutsideClick(event) {
+      if (this.visible && !this.$el.contains(event.target)) this.visible = false
     },
     selectEvent(item) {
       this.defaultValue = `${this.cnList(item)}${item}`

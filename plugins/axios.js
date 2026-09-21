@@ -1,24 +1,49 @@
-import jsSHA from "jssha"
+const TOKEN_URL = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token'
 
-const getAuthorizationHeader = () => {
-  const AppID = 'd090fe07190b465593810b508ab5ead9'
-  const AppKey = 'Lv0hXoTjqY-ihoCgosZNAbcab2o'
 
-  const GMTString = new Date().toGMTString()
-  const ShaObj = new jsSHA('SHA-1', 'TEXT')
-  ShaObj.setHMACKey(AppKey, 'TEXT')
-  ShaObj.update(`x-date: ${GMTString}`)
+// refresh a little before the real expiry so an in-flight request never carries a dead token
+const EXPIRY_MARGIN_MS = 60 * 1000
 
-  const HMAC = ShaObj.getHMAC('B64')
-  const Authorization = 'hmac username=\"' + AppID + '\", algorithm=\"hmac-sha1\", headers=\"x-date\", signature=\"' + HMAC + '\"'
+export default function({ $axios, $config }) {
+  const { tdxClientId, tdxClientSecret } = $config
+  console.log('TDX Client ID:', tdxClientId)
+  console.log('TDX Client Secret:', tdxClientSecret)
 
-  return { 'Authorization': Authorization, 'X-Date': GMTString }
-}
+  let token = ''
+  let expiresAt = 0
+  let pending = null
 
-export default function({ $axios }) {
-  $axios.defaults.baseURL = `https://tdx.transportdata.tw/api/basic/v2/`
-  $axios.defaults.headers = getAuthorizationHeader()
-  // $axios.onRequest((config) => {
-  //   console.log('Making request to ' + config.url)
-  // })
+  const requestToken = async () => {
+    const res = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: tdxClientId,
+        client_secret: tdxClientSecret
+      })
+    })
+
+    if (!res.ok) throw new Error(`TDX token request failed: ${res.status}`)
+
+    const data = await res.json()
+    token = data.access_token
+    expiresAt = Date.now() + data.expires_in * 1000 - EXPIRY_MARGIN_MS
+
+    return token
+  }
+
+  // concurrent requests share one token request (token endpoint is limited to 20 calls/min/IP)
+  const getToken = () => {
+    if (token && Date.now() < expiresAt) return Promise.resolve(token)
+    if (!pending) pending = requestToken().finally(() => { pending = null })
+
+    return pending
+  }
+
+  $axios.defaults.baseURL = 'https://tdx.transportdata.tw/api/'
+  $axios.onRequest(async config => {
+    config.headers.common.Authorization = `Bearer ${await getToken()}`
+    return config
+  })
 }

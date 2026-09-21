@@ -12,6 +12,39 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
+const escapeHtml = text => {
+  const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+
+  return String(text).replace(/[&<>"']/g, char => entities[char])
+}
+
+// popup card for a bike station, same look as the marker detail modal
+const createBikePopupHtml = ({ title, stats = [], rows = [] }) => {
+  const statsHtml = stats.map(({ label, value }) => `
+    <div class="bikePopup-stat">
+      <span class="bikePopup-value">${escapeHtml(value)}</span>
+      <span class="bikePopup-label">${escapeHtml(label)}</span>
+    </div>
+  `).join('')
+
+  const rowsHtml = rows.map(({ label, value }) => `
+    <div class="bikePopup-row">
+      <span class="bikePopup-label">${escapeHtml(label)}</span>
+      <span class="bikePopup-text">${escapeHtml(value)}</span>
+    </div>
+  `).join('')
+
+  return `
+    <span class="bikePopup-badge">單車站</span>
+    <h3 class="bikePopup-title">${escapeHtml(title)}</h3>
+    ${stats.length ? `<div class="bikePopup-stats">${statsHtml}</div>` : ''}
+    ${rowsHtml}
+  `
+}
+
+// "2026-09-21T12:33:56+08:00" -> "2026-09-21 12:33"
+const formatUpdateTime = time => String(time).replace('T', ' ').slice(0, 16)
+
 export default {
   data() {
     return {
@@ -26,6 +59,9 @@ export default {
       nearRestaruantMarkers: [],
       nearScenicSpotMarkers: [],
       nearHotelMarkers: [],
+      nearEventMarkers: [],
+      nearServiceSiteMarkers: [],
+      nearMetroMarkers: [],
       curMarkerDetailInfo: {},
       curModalType: ''
     }
@@ -42,6 +78,9 @@ export default {
       getRestaruant: 'restaurantNearBy',
       getScenicSpot: 'scenicSpotNearBy',
       getHotel: 'hotelNearBy',
+      getEvent: 'eventNearBy',
+      getServiceSite: 'serviceSiteNearBy',
+      getMetro: 'metroNearBy',
       isClearMarkers: 'isClearMakers',
       isClearBikePath: 'isClearBikePath',
       getBasicSelect: 'basicSelect',
@@ -79,8 +118,31 @@ export default {
             this.getHotel,
             this.nearHotelMarkers
           )
+
+          this.getStationNearByMarkers(
+            'event',
+            this.getEvent,
+            this.nearEventMarkers
+          )
+
+          this.getStationNearByMarkers(
+            'serviceSite',
+            this.getServiceSite,
+            this.nearServiceSiteMarkers
+          )
+
+          this.getStationNearByMarkers(
+            'metro',
+            this.getMetro,
+            this.nearMetroMarkers
+          )
         }
       }
+    },
+    // switching the search distance loads a new set of stations, keep the map in sync with it
+    getCurNearByStation(val) {
+      // no user position means the advanced search was cleared, not that this range has no stations
+      if (this.mapInstance && this.getUserPosition.length > 0) this.getUserCurPosNearByStation(val)
     },
     updateUserPosSelect: {
       deep: true,
@@ -131,6 +193,45 @@ export default {
         }
       }
     },
+    getEvent: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val.length > 0) {
+          this.getStationNearByMarkers(
+            'event',
+            this.getEvent,
+            this.nearEventMarkers
+          )
+        }
+      }
+    },
+    getServiceSite: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val.length > 0) {
+          this.getStationNearByMarkers(
+            'serviceSite',
+            this.getServiceSite,
+            this.nearServiceSiteMarkers
+          )
+        }
+      }
+    },
+    getMetro: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val.length > 0) {
+          this.getStationNearByMarkers(
+            'metro',
+            this.getMetro,
+            this.nearMetroMarkers
+          )
+        }
+      }
+    },
     isClearMarkers: {
       immediate: true,
       handler(val) {
@@ -139,6 +240,12 @@ export default {
           this.clearOldMarkers(this.nearRestaruantMarkers)
           this.clearOldMarkers(this.nearScenicSpotMarkers)
           this.clearOldMarkers(this.nearHotelMarkers)
+          this.clearOldMarkers(this.nearEventMarkers)
+          this.clearOldMarkers(this.nearServiceSiteMarkers)
+          this.clearOldMarkers(this.nearMetroMarkers)
+          // markers of the advanced search
+          this.clearOldMarkers(this.nearStationMarkers)
+          this.clearOldMarkers(this.selfPosMarker)
           this.isClearInfoMarker(false)
         }
       }
@@ -172,9 +279,45 @@ export default {
       })
 
       this.mapMarker = await new this.$map.Marker()
-      this.mapPopup = await new this.$map.Popup()
+      this.mapPopup = this.createBikePopup()
 
       setTimeout(() => { this.isLoadingSource(true) }, 2000)
+    },
+    createBikePopup() {
+      return new this.$map.Popup({
+        className: 'bikePopup',
+        closeButton: false,
+        maxWidth: '260px'
+      })
+    },
+    // fade every near station except the one whose popup is open, restore them all once no popup is open
+    updateNearStationsFade() {
+      const active = this.nearStationMarkers.find(marker => marker.getPopup().isOpen())
+
+      this.nearStationMarkers.forEach(marker => {
+        marker.getElement().classList.toggle('faded', Boolean(active) && marker !== active)
+      })
+    },
+    // full popup content of a near station, the availability is matched by station uid
+    // (it only covers the nearest stations, so it can be missing)
+    getNearStationPopupHtml(station) {
+      const title = station.StationName.Zh_tw
+      const address = { label: '地址 / Address', value: station.StationAddress.Zh_tw }
+      const availability = this.getAvailabilityNearByArray.find(item => item.StationUID === station.StationUID)
+
+      if (!availability) return createBikePopupHtml({ title, rows: [address] })
+
+      return createBikePopupHtml({
+        title,
+        stats: [
+          { label: '可租借 / Balance', value: availability.AvailableRentBikes },
+          { label: '未歸還 / Not return', value: availability.AvailableReturnBikes }
+        ],
+        rows: [
+          address,
+          { label: '更新時間 / Updated', value: formatUpdateTime(availability.UpdateTime) }
+        ]
+      })
     },
     getCurNearSelectMarker(target) {
       const { pos, name } = target
@@ -184,41 +327,10 @@ export default {
         return item.StationName.Zh_tw === name.Zh_tw
       })
 
-      // get need info
-      const availabilityAry = this.getAvailabilityNearByArray
-      const {
-        AvailableRentBikes,
-        AvailableReturnBikes,
-        UpdateTime
-      } = availabilityAry[targetMarker]
+      // open the popup of the selected marker
+      const marker = this.nearStationMarkers[targetMarker]
 
-      // set marker
-      this.nearStationMarkers[targetMarker]
-        .setPopup(
-          this.mapPopup
-            .setHTML(`
-              <p class="popup-content">
-                <span>address :</span> 
-                <span>${target.address.Zh_tw}</span>
-              </p>
-              <div class="popup-flex">
-                <p class="popup-content">
-                  <span>balance : </span>
-                  <span>${AvailableRentBikes}</span>
-                </p>
-                <p class="popup-content">
-                  <span>not return : </span>
-                  <span>${AvailableReturnBikes}</span>
-                </p>
-              </div>
-              <p class="popup-content">
-                <span>update times : </span>
-                <br />
-                <span>${UpdateTime}</span>
-                </p>
-            `)
-        )
-        .togglePopup()
+      if (!marker.getPopup().isOpen()) marker.togglePopup()
 
       // jump to select marker
       this.mapInstance.jumpTo(
@@ -235,10 +347,8 @@ export default {
       )
     },
     clearOldMarkers(targets) {
-      if (targets.length > 0) {
-        targets.forEach(item => item.remove())
-        targets = []
-      } return
+      // empty the array in place, reassigning the parameter would only change the local copy
+      targets.splice(0).forEach(item => item.remove())
     },
     clearBikePath() {
       // update / remove source and layer
@@ -267,10 +377,7 @@ export default {
       return el
     },
     getStationNearByMarkers(type, markersInfo, markersArray) {
-      if (markersArray.length > 0) {
-        markersArray.forEach(item => item.remove())
-        markersArray = []
-      }
+      this.clearOldMarkers(markersArray)
 
       const result = markersInfo.slice()
       result.forEach((item, idx) => {
@@ -279,7 +386,7 @@ export default {
         const markerInfo = { type: type, idx: idx, info: item  }
 
         markers.setLngLat(item.pos).addTo(this.mapInstance)
-        this.nearRestaruantMarkers.push(markers)
+        markersArray.push(markers)
 
         this.addEventListenerToMarker(markerInfo)
       })
@@ -306,12 +413,21 @@ export default {
 
       // add all nearMarker on map
       nearByAry.forEach(item => {
-        const { StationName, StationPosition } = item
+        const { StationPosition } = item
         const nearMarker = new this.$map.Marker()
+        // every marker needs its own popup, a shared one is moved around by whichever marker updated last
+        const popup = this.createBikePopup().setHTML(this.getNearStationPopupHtml(item))
+
+        popup.on('open', () => {
+          // the availability is loaded by a separate request, so read it again when the popup is shown
+          popup.setHTML(this.getNearStationPopupHtml(item))
+          this.updateNearStationsFade()
+        })
+        popup.on('close', this.updateNearStationsFade)
 
         nearMarker
           .setLngLat([StationPosition.PositionLon, StationPosition.PositionLat])
-          .setPopup(this.mapPopup.setHTML(StationName.Zh_tw))
+          .setPopup(popup)
           .addTo(this.mapInstance)
 
         // save all nearMarker
@@ -337,7 +453,10 @@ export default {
 
       this.mapMarker
         .setLngLat([target.pos.PositionLon, target.pos.PositionLat])
-        .setPopup(this.mapPopup.setHTML(target.address))
+        .setPopup(this.mapPopup.setHTML(createBikePopupHtml({
+          title: target.name,
+          rows: [{ label: '地址 / Address', value: target.address }]
+        })))
         .addTo(this.mapInstance)
         .togglePopup(true)
 
@@ -481,10 +600,19 @@ export default {
       await this.getAllStation(city)
       this.station = this.$store.state.station
     },
-    getCurMarkerDetailInfo(type, info) {
-      this.curMarkerDetailInfo = info
+    async getCurMarkerDetailInfo(type, info) {
+      const loading = '載入中...'
+
+      this.curMarkerDetailInfo = { ...info, add: loading, open: loading, phone: loading, fee: loading }
       this.curModalType = type
       this.$store.dispatch('isOpenModal', true)
+
+      const detail = await this.$store.dispatch('getTourismDetail', { type, id: info.id })
+
+      // the user may have clicked another marker while this one was loading
+      if (this.curMarkerDetailInfo.id === info.id) {
+        this.curMarkerDetailInfo = { ...info, ...detail }
+      }
     },
     addEventListenerToMarker(targetMarker) {
       const { type, idx, info } = targetMarker
@@ -492,31 +620,135 @@ export default {
 
       targetEl.addEventListener('click', () => this.getCurMarkerDetailInfo(type, info))
     },
-    removeEventListenerToMarker() {
-      const getAllMarker = document.querySelectorAll('.marker')
-      getAllMarker.forEach(
-        item => item.removeEventListener('click', this.getCurMarkerDetailInfo(this.curMarkerDetailInfo))
-      )
-    },
   },
   mounted() {
     this.initMapBox()
   },
-  beforeDestroyed() {
-    this.removeEventListenerToMarker()
+  beforeDestroy() {
+    this.clearOldMarkers(this.stationMarker)
+    this.clearOldMarkers(this.nearStationMarkers)
+    this.clearOldMarkers(this.selfPosMarker)
+    this.clearOldMarkers(this.nearRestaruantMarkers)
+    this.clearOldMarkers(this.nearScenicSpotMarkers)
+    this.clearOldMarkers(this.nearHotelMarkers)
+    this.clearOldMarkers(this.nearEventMarkers)
+    this.clearOldMarkers(this.nearServiceSiteMarkers)
+    this.clearOldMarkers(this.nearMetroMarkers)
+
+    if (this.mapInstance) this.mapInstance.remove()
   }
 }
 </script>
 
 <style lang="sass">
-.popup-flex
-  display: flex
-  p
-    &:nth-of-type(1)
-      margin-right: 20px
+// bike station popup (mapbox popup, so it lives outside the component scope)
+$popup-bg: rgba(#0F1A24, 0.92)
+$popup-accent: #22B8CF
 
-.popup-content span:nth-of-type(1)
-  color: #F2DD66
+.bikePopup
+  z-index: 2
+  .mapboxgl-popup-content
+    position: relative
+    overflow: hidden
+    min-width: 200px
+    padding: 14px 16px 10px
+    color: #fff
+    font-weight: normal
+    background: $popup-bg
+    border: 1px solid rgba(#fff, 0.08)
+    border-radius: 14px
+    box-shadow: 0 16px 40px rgba(#000, 0.4), 0 2px 6px rgba(#000, 0.3)
+    backdrop-filter: blur(10px)
+    // colour bar on top of the card
+    &:before
+      content: ''
+      position: absolute
+      top: 0
+      left: 0
+      right: 0
+      height: 3px
+      background: $popup-accent
+  // the global tip colours use !important, so these have to as well
+  &.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+  &.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+  &.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip
+    border-top-color: $popup-bg !important
+  &.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+  &.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+  &.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip
+    border-bottom-color: $popup-bg !important
+  &.mapboxgl-popup-anchor-left .mapboxgl-popup-tip
+    border-right-color: $popup-bg !important
+  &.mapboxgl-popup-anchor-right .mapboxgl-popup-tip
+    border-left-color: $popup-bg !important
+
+// near stations that are not the selected one
+.mapboxgl-marker svg
+  transition: opacity 0.25s ease
+.mapboxgl-marker.faded svg
+  opacity: 0.3
+
+.bikePopup-badge
+  display: inline-flex
+  align-items: center
+  padding: 2px 10px 2px 8px
+  font-size: 12px
+  font-weight: bold
+  letter-spacing: 1px
+  color: $popup-accent
+  background: rgba($popup-accent, 0.16)
+  border-radius: 999px
+  &:before
+    content: ''
+    width: 6px
+    height: 6px
+    margin-right: 6px
+    border-radius: 50%
+    background: $popup-accent
+
+.bikePopup-title
+  margin: 10px 0 12px
+  font-size: 16px
+  font-weight: bold
+  line-height: 1.4
+  word-break: break-word
+
+.bikePopup-stats
+  display: flex
+  margin-bottom: 4px
+  border-top: 1px solid rgba(#fff, 0.08)
+
+.bikePopup-stat
+  display: flex
+  flex-direction: column
+  flex: 1
+  padding: 10px 0
+  &:nth-of-type(2)
+    padding-left: 14px
+    border-left: 1px solid rgba(#fff, 0.08)
+  .bikePopup-value
+    font-size: 24px
+    font-weight: bold
+    line-height: 1.2
+    color: $popup-accent
+
+.bikePopup-row
+  display: flex
+  flex-direction: column
+  padding: 9px 0
+  border-top: 1px solid rgba(#fff, 0.08)
+  .bikePopup-text
+    margin-top: 3px
+    font-size: 13px
+    line-height: 1.5
+    color: rgba(#fff, 0.92)
+    word-break: break-word
+
+.bikePopup-label
+  font-size: 11px
+  font-weight: bold
+  letter-spacing: 1px
+  color: rgba(#fff, 0.5)
 
 @keyframes userPoint
   0%
@@ -531,7 +763,8 @@ export default {
   border-radius: 50%
   position: absolute
   border: 3px solid #a3a3a3
-  transition: 0.3s
+  // only fade in / out, a transition on transform would make the marker lag behind while the map is moved
+  transition: opacity 0.3s, visibility 0.3s
   z-index: 1
   &.hidden
     opacity: 0
@@ -545,6 +778,12 @@ export default {
     background: #5EAA5F
   &.hotel
     background: #FECE00
+  &.event
+    background: #8E6BBF
+  &.serviceSite
+    background: #F08A3C
+  &.metro
+    background: #2E86DE
 
 .textBlock
   +setPosAbs(-42px,null,null,50%)
@@ -558,7 +797,7 @@ export default {
   border-radius: 6px
   &.self
     width: 50px
-  &.restaurant,&.scenicSpot,&.hotel
+  &.restaurant,&.scenicSpot,&.hotel,&.event,&.serviceSite,&.metro
     min-width: 100px
     padding: 0 5px
   &:after

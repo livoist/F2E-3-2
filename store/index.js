@@ -23,6 +23,15 @@ const GET_NEAR_SCENICSPOT = 'GET_NEAR_SCENICSPOT'
 // get nearBy hotel
 const GET_NEAR_HOTEL = 'GET_NEAR_HOTEL'
 
+// get nearBy event
+const GET_NEAR_EVENT = 'GET_NEAR_EVENT'
+
+// get nearBy tourism service site
+const GET_NEAR_SERVICE_SITE = 'GET_NEAR_SERVICE_SITE'
+
+// get nearBy metro station
+const GET_NEAR_METRO = 'GET_NEAR_METRO'
+
 // is clear other markers
 const IS_CLEAR_OTHER_MARKERS = 'IS_CLEAR_OTHER_MARKERS'
 
@@ -44,12 +53,82 @@ const IS_LOADING_SOURCE = 'IS_LOADING_SOURCE'
 // is open modal
 const IS_OPEN_MODAL = 'IS_OPEN_MODAL'
 
-const getStationNearByUrl = (type, city, lat, lon) => {
-  const endpoint = `Tourism/${type}/${city}`
-  const url = `${endpoint}?$top=10&$spatialFilter=nearby(${lat},${lon}, 3000)&$format=JSON`
+const TOURISM_ENDPOINT = 'tourism/service/odata/V2/Tourism'
+const TOURISM_NEARBY_ENDPOINT = `${TOURISM_ENDPOINT}/Nearby`
+const NEAR_BY_DISTANCE = 1000
+const MAX_NEAR_BY_ITEMS = 10
 
-  return url
+// Nearby only returns id, name and position for each place (no address / phone / opening hours),
+// keep the id so the details can be looked up from the per-type endpoints later
+const normalizeNearBy = (list, idKey, nameKey) => {
+  return (list || []).slice(0, MAX_NEAR_BY_ITEMS).map(item => ({
+    id: item[idKey],
+    pos: [item.PositionLon, item.PositionLat],
+    name: item[nameKey]
+  }))
 }
+
+// ---Tourism detail (looked up by the ids from Nearby)--- //
+const joinAddress = address => {
+  if (!address) return ''
+
+  return [address.City, address.Town, address.StreetAddress].filter(Boolean).join('')
+}
+
+const joinPhones = phones => {
+  return (phones || [])
+    .map(item => item.Ext ? `${item.Tel} #${item.Ext}` : item.Tel)
+    .filter(Boolean)
+    .join(', ')
+}
+
+const formatDate = iso => iso ? iso.slice(0, 10) : ''
+
+// the API glues the weekdays together ("星期一: 休息星期二: 11:00 – 14:00星期三: ..."), split them apart again
+const formatServiceTimeInfo = text => (text || '').replace(/(.)(星期[一二三四五六日]:)/g, '$1；$2')
+
+// address / phone / opening time exist on the detail of every type
+const normalizeDetail = res => ({
+  add: joinAddress(res.PostalAddress),
+  phone: joinPhones(res.Telephones),
+  open: formatServiceTimeInfo(res.ServiceTimeInfo)
+})
+
+const TOURISM_DETAIL = {
+  restaurant: {
+    path: id => `Restaurant/${id}`,
+    normalize: normalizeDetail
+  },
+  scenicSpot: {
+    path: id => `Attraction/${id}`,
+    normalize: res => ({
+      ...normalizeDetail(res),
+      fee: res.FeeInfo || (res.IsAccessibleForFree ? '免費' : '')
+    })
+  },
+  hotel: {
+    path: id => `Hotel/${id}`,
+    normalize: normalizeDetail
+  },
+  serviceSite: {
+    path: id => `TourismServiceSite/${id}`,
+    normalize: normalizeDetail
+  },
+  event: {
+    path: id => `Event/${id}`,
+    normalize: res => ({
+      ...normalizeDetail(res),
+      // events have a running period instead of opening hours
+      open: res.StartDateTime ? `${formatDate(res.StartDateTime)} ~ ${formatDate(res.EndDateTime)}` : ''
+    })
+  }
+}
+
+// the API is strictly rate limited, so a detail is only requested once per place
+const detailCache = {}
+
+// types without an entry in TOURISM_DETAIL (metro stations) only have what Nearby returns
+const NO_DETAIL = {}
 
 const state = () => ({
   station: '',
@@ -66,6 +145,9 @@ const state = () => ({
   restaurantNearBy: [],
   scenicSpotNearBy: [],
   hotelNearBy: [],
+  eventNearBy: [],
+  serviceSiteNearBy: [],
+  metroNearBy: [],
   isClearMakers: false,
   isClearBikePath: false,
   basicSelect: false,
@@ -118,6 +200,15 @@ const mutations = {
   [GET_NEAR_HOTEL](state, result) {
     state.hotelNearBy = result
   },
+  [GET_NEAR_EVENT](state, result) {
+    state.eventNearBy = result
+  },
+  [GET_NEAR_SERVICE_SITE](state, result) {
+    state.serviceSiteNearBy = result
+  },
+  [GET_NEAR_METRO](state, result) {
+    state.metroNearBy = result
+  },
   [IS_CLEAR_OTHER_MARKERS](state, bool) {
     state.isClearMakers = bool
   },
@@ -163,6 +254,13 @@ const actions = {
   isClearInfoMarker({ commit }, bool) {
     commit(IS_CLEAR_OTHER_MARKERS, bool)
   },
+  // forget everything the advanced (near by) search produced
+  clearNearByStation({ commit }) {
+    commit(GET_USER_POSITION, [])
+    commit(GET_BIKE_STATION_NEAR_BY, [])
+    commit(GET_BIKE_AVAILABILITY_NEAR_BY, [])
+    commit(GET_CUR_NEAR_ITEM, '')
+  },
   getCurNearItem({ commit }, item) {
     commit(GET_CUR_NEAR_ITEM, item)
   },
@@ -173,7 +271,7 @@ const actions = {
     commit(GET_CUR_TARGET, curTarget)
   },
   async getAllStation({ commit }, city) {
-    const url = 'Bike/Station/City'
+    const url = 'basic/v2/Bike/Station/City'
     const res = await this.$axios.$get(`${url}/${city}?&$format=JSON`)
 
     const curCityMap = res.map(item => {
@@ -192,19 +290,19 @@ const actions = {
     commit(GET_CUR_CITY_MAP, curCityMap)
   },
   async getAvailability({ commit }, city) {
-    const url = 'Bike/Availability/City'
+    const url = 'basic/v2/Bike/Availability/City'
     const res = await this.$axios.$get(`${url}/${city}?$format=JSON`)
 
     commit(GET_BIKE_AVAILABILITY, res)
   },
   async getCyclingShape({ commit }, city) {
-    const url = 'Cycling/Shape/City'
+    const url = 'basic/v2/Cycling/Shape/City'
     const res = await this.$axios.$get(`${url}/${city}?$format=JSON`)
 
     commit(GET_BIKE_CYCLING_SHAPE, res)
   },
   async getStationNearBy({ commit }, condition) {
-    const url = 'Bike/Station/NearBy'
+    const url = 'advanced/v2/Bike/Station/NearBy'
     const { lat, lon, distance } = condition
     // console.log('lat: ', lat)
     // console.log('lon: ', lon)
@@ -226,7 +324,7 @@ const actions = {
     commit(GET_BIKE_STATION_NEAR_BY, res)
   },
   async getAvailabilityNearBy({ commit }, condition) {
-    const url = 'Bike/Availability/NearBy'
+    const url = 'advanced/v2/Bike/Availability/NearBy'
     const { lat, lon, distance } = condition
     // console.log('lat: ', lat)
     // console.log('lon: ', lon)
@@ -243,71 +341,50 @@ const actions = {
 
     commit(GET_BIKE_AVAILABILITY_NEAR_BY, res)
   },
-  async getRestaurantNearByPos({ commit }, condition) {
-    const { PositionLat, PositionLon } = condition.pos
-    const city = condition.city
+  async getTourismDetail(context, { type, id }) {
+    const key = `${type}:${id}`
 
-    const result = getStationNearByUrl('Restaurant', city, PositionLat, PositionLon)
-    const res = await this.$axios.$get(result)
+    if (!TOURISM_DETAIL[type]) return NO_DETAIL
 
-    const newResultMap = res.map(item => {
-      const { Position, Address, RestaurantName, Phone, OpenTime } = item
-      const { PositionLat, PositionLon } = Position
+    if (!detailCache[key]) {
+      const { path, normalize } = TOURISM_DETAIL[type]
 
-      return {
-        pos: [PositionLon, PositionLat],
-        add: Address,
-        name: RestaurantName,
-        phone: Phone,
-        open: OpenTime
-      }
-    })
+      detailCache[key] = this.$axios.$get(`${TOURISM_ENDPOINT}/${path(id)}`)
+        // single-item endpoints return the object itself, list endpoints wrap it in { value: [] }
+        .then(res => normalize(res.value ? res.value[0] || {} : res))
+        .catch(err => {
+          // 404 means the place has no such data, which is final; anything else may work next time
+          if (!err.response || err.response.status !== 404) {
+            delete detailCache[key]
+            console.warn(`Failed to load ${type} detail`, err)
+          }
 
-    commit(GET_NEAR_RESTAURANT, newResultMap)
+          return {}
+        })
+    }
+
+    return detailCache[key]
   },
-  async getScenicSpotNearByPos({ commit }, condition) {
-    const { PositionLat, PositionLon } = condition.pos
-    const city = condition.city
+  async getTourismNearBy({ commit }, pos) {
+    const { PositionLat, PositionLon } = pos
+    let res = {}
 
-    const result = getStationNearByUrl('ScenicSpot', city, PositionLat, PositionLon)
-    const res = await this.$axios.$get(result)
+    try {
+      // this endpoint rejects $format, so it is intentionally not sent
+      res = await this.$axios.$get(
+        `${TOURISM_NEARBY_ENDPOINT}?X=${PositionLon}&Y=${PositionLat}&Distance=${NEAR_BY_DISTANCE}`
+      )
+    } catch (err) {
+      // tourism data is optional extra info, don't break the station search when it fails
+      console.warn('Failed to load tourism near by', err)
+    }
 
-    const newResultMap = res.map(item => {
-      const { Position, Address, ScenicSpotName, Phone, OpenTime } = item
-      const { PositionLat, PositionLon } = Position
-
-      return {
-        pos: [PositionLon, PositionLat],
-        add: Address,
-        name: ScenicSpotName,
-        phone: Phone,
-        open: OpenTime
-      }
-    })
-
-    commit(GET_NEAR_SCENICSPOT, newResultMap)
-  },
-  async getHotelNearByPos({ commit }, condition) {
-    const { PositionLat, PositionLon } = condition.pos
-    const city = condition.city
-
-    const result = getStationNearByUrl('Hotel', city, PositionLat, PositionLon)
-    const res = await this.$axios.$get(result)
-
-    const newResultMap = res.map(item => {
-      const { Position, Address, HotelName, Phone, OpenTime } = item
-      const { PositionLat, PositionLon } = Position
-
-      return {
-        pos: [PositionLon, PositionLat],
-        add: Address,
-        name: HotelName,
-        phone: Phone,
-        open: OpenTime
-      }
-    })
-
-    commit(GET_NEAR_HOTEL, newResultMap)
+    commit(GET_NEAR_RESTAURANT, normalizeNearBy(res.RelatedRestaurants, 'RestaurantID', 'RestaurantName'))
+    commit(GET_NEAR_SCENICSPOT, normalizeNearBy(res.RelatedAttractions, 'AttractionID', 'AttractionName'))
+    commit(GET_NEAR_HOTEL, normalizeNearBy(res.RelatedHotels, 'HotelID', 'HotelName'))
+    commit(GET_NEAR_EVENT, normalizeNearBy(res.RelatedEvents, 'EventID', 'EventName'))
+    commit(GET_NEAR_SERVICE_SITE, normalizeNearBy(res.RelatedTourismServiceSites, 'TourismServiceSiteID', 'TourismServiceSiteName'))
+    commit(GET_NEAR_METRO, normalizeNearBy(res.RelatedMetroStations, 'StationUID', 'StationName'))
   }
 }
 

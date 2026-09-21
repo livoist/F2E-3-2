@@ -66,6 +66,12 @@ export default {
     '@nuxtjs/style-resources'
   ],
 
+  // TDX credentials, read from .env at build time (TDX_CLIENT_ID / TDX_CLIENT_SECRET)
+  publicRuntimeConfig: {
+    tdxClientId: process.env.TDX_CLIENT_ID,
+    tdxClientSecret: process.env.TDX_CLIENT_SECRET
+  },
+
   // global mixin
   styleResources: {
     sass: [

@@ -31,6 +31,10 @@
 </template>
 
 <script>
+// a pointer that moved further than this between press and release was dragging, not clicking
+const DRAG_TOLERANCE = 5
+const INSIDE_SELECTOR = '.searchBtns, .bikeRentInfos, .bikePathInfos'
+
 export default {
   name: 'SideMenu',
   data() {
@@ -60,7 +64,34 @@ export default {
       return this.$store.state.basicSelect
     }
   },
+  created() {
+    this.pointerStart = null
+  },
+  mounted() {
+    document.addEventListener('pointerdown', this.recordPointerStart, true)
+    document.addEventListener('click', this.closePanelOnOutsideClick)
+  },
+  beforeDestroy() {
+    document.removeEventListener('pointerdown', this.recordPointerStart, true)
+    document.removeEventListener('click', this.closePanelOnOutsideClick)
+  },
   methods: {
+    recordPointerStart(event) {
+      this.pointerStart = { x: event.clientX, y: event.clientY }
+    },
+    // clicking anywhere except the panels and their buttons folds the open panel, its data is kept
+    closePanelOnOutsideClick(event) {
+      if (!this.isOpenLocation && !this.isOpenBikePath) return
+
+      // dragging the map also ends with a click
+      const start = this.pointerStart
+      if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > DRAG_TOLERANCE) return
+
+      if (event.target.closest && event.target.closest(INSIDE_SELECTOR)) return
+
+      this.isOpenLocation = false
+      this.isOpenBikePath = false
+    },
     changeInfo(type) {
       this.isOpenBikeDetail = false
 

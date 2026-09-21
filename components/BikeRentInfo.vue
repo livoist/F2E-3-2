@@ -11,12 +11,17 @@ div
       span {{ notReturn }}
 
     div.checkboxBlock
-      div(v-for="(item, idx) in checkboxs" :key="item.id")
+      div(
+        v-for="(item, idx) in checkboxs"
+        :key="item.id"
+        :class="{ 'disabled': isEmptyType(item) }"
+      )
         label(:for="item.type") {{ item.name }}
         input(
           type="checkbox"
           :name="item.type"
           :id="item.type"
+          :disabled="isEmptyType(item)"
           v-model="item.modelTarget"
           @change="isShowStationNearByInfos(item.modelTarget, item.type)"
         )
@@ -62,6 +67,7 @@ div
       .selectBox
         p 搜尋範圍 / Distance
         CustomSelect.advance(
+          ref="advanceSelect"
           :selectList="ranges"
           @defVal="getCurMeters"
         )
@@ -166,16 +172,37 @@ export default {
         {
           name: '餐廳 / restaurant',
           type: 'restaurant',
+          stateKey: 'restaurantNearBy',
           modelTarget: false
         },
         {
           name: '景點 / attractions',
           type: 'scenicSpot',
+          stateKey: 'scenicSpotNearBy',
           modelTarget: false
         },
         {
           name: '住宿 / hotel',
           type: 'hotel',
+          stateKey: 'hotelNearBy',
+          modelTarget: false
+        },
+        {
+          name: '活動 / event',
+          type: 'event',
+          stateKey: 'eventNearBy',
+          modelTarget: false
+        },
+        {
+          name: '旅遊服務站 / service site',
+          type: 'serviceSite',
+          stateKey: 'serviceSiteNearBy',
+          modelTarget: false
+        },
+        {
+          name: '捷運站 / metro',
+          type: 'metro',
+          stateKey: 'metroNearBy',
           modelTarget: false
         }
       ]
@@ -194,6 +221,7 @@ export default {
       handler(val) {
         if(val) {
           this.isOpenFixedInfo = false
+          this.resetAdvanceSearch()
         }
       }
     },
@@ -228,9 +256,7 @@ export default {
           this.isOpenModal(false)
 
           this.getCurCityMap()
-          this.getRestaurantNearByPosInfo(this.curCity, this.curTarget.pos)
-          this.getScenicSpotNearByPosInfo(this.curCity, this.curTarget.pos)
-          this.getHotelNearByPosInfo(this.curCity, this.curTarget.pos)
+          this.getTourismNearBy(this.curTarget.pos)
 
           setTimeout(() => {
             this.canRent = this.curRent.AvailableRentBikes
@@ -269,9 +295,8 @@ export default {
     ...mapActions([
       'isLoading',
       'changeBasicSelect',
-      'getRestaurantNearByPos',
-      'getScenicSpotNearByPos',
-      'getHotelNearByPos',
+      'getTourismNearBy',
+      'clearNearByStation',
       'getCurNearItem',
       'getAvailabilityNearBy',
       'getStationNearBy',
@@ -288,17 +313,16 @@ export default {
       this.curSelect = val
       this.changeBasicSelect(true)
     },
+    // the other panel was opened: drop the near by stations and the chosen distance
+    // (the distance has to go too, picking the same one again would not trigger a new search)
+    resetAdvanceSearch() {
+      this.curMeters = 0
+      this.clearNearByStation()
+
+      if (this.$refs.advanceSelect) this.$refs.advanceSelect.reset()
+    },
     getCurMeters(val) {
       this.curMeters = val
-    },
-    getRestaurantNearByPosInfo(city, pos) {
-      this.getRestaurantNearByPos({ city, pos })
-    },
-    getScenicSpotNearByPosInfo(city, pos) {
-      this.getScenicSpotNearByPos({ city, pos })
-    },
-    getHotelNearByPosInfo(city, pos) {
-      this.getHotelNearByPos({ city, pos })
     },
     getCurNearNameItemInfo(item) {
       this.isOpenFixedInfo = false
@@ -343,6 +367,10 @@ export default {
       })
 
       this.curRent = resource[0]
+    },
+    // a type with nothing near the station has no marker to show, so its checkbox is disabled
+    isEmptyType(item) {
+      return this.$store.state[item.stateKey].length === 0
     },
     isShowStationNearByInfos(val, type) {
       const infos = document.querySelectorAll(`.marker.${type}`)
@@ -527,13 +555,12 @@ export default {
 .fixedBikeRentInfo
   position: fixed
   top: 0
-  left: 50%
-  transform: translateX(-50%)
+  right: 0
   display: flex
   align-items: center
   background: rgba(#08111A,0.75)
   padding: 6px 4px 8px
-  border-radius: 0 0 4px 4px
+  border-radius: 0 0 0 4px
   opacity: 0
   visibility: hidden
   transition: 0.3s
@@ -542,8 +569,8 @@ export default {
     padding: 3vmin 4vmin
     flex-direction: column
     align-items: flex-start
-    right: 0
-    transform: translateX(0)
+    left: 50%
+    border-radius: 0 0 4px 4px
   &.active
     opacity: 1
     visibility: visible
@@ -576,6 +603,16 @@ export default {
             background: #5EAA5F
           &:nth-of-type(3):before
             background: #FECE00
+          &:nth-of-type(4):before
+            background: #8E6BBF
+          &:nth-of-type(5):before
+            background: #F08A3C
+          &:nth-of-type(6):before
+            background: #2E86DE
+          &.disabled
+            opacity: 0.35
+            label,input
+              cursor: not-allowed
           &:before
             content: ''
             +setSize(10px)
